@@ -1,15 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <StaminaProperties>
-  <StaminaGainedPerAthletics>10</StaminaGainedPerAthletics>
-  <StaminaGainedPerCombatSkill>5</StaminaGainedPerCombatSkill>
-  <StaminaGainedPerLevel>10</StaminaGainedPerLevel>
+  <BaseStaminaValue>100</BaseStaminaValue>
+  <StaminaGainedPerAthletics>5</StaminaGainedPerAthletics>
+  <StaminaGainedPerCombatSkill>1</StaminaGainedPerCombatSkill>
+  <StaminaGainedPerLevel>5</StaminaGainedPerLevel>
+  
   <StaminaCostToMeleeAttack>10</StaminaCostToMeleeAttack>
   <StaminaCostToRangedAttack>10</StaminaCostToRangedAttack>
   <StaminaCostToBlock>5</StaminaCostToBlock>
   <StaminaCostPerReceivedDamage>1</StaminaCostPerReceivedDamage>
+  
   <LowestSpeedFromStaminaDebuff>0.5</LowestSpeedFromStaminaDebuff>
-  <StaminaRecoveredPerTick>0.1</StaminaRecoveredPerTick>
+  <StaminaRecoveredPerTick>0.08</StaminaRecoveredPerTick>
+  <SecondsBeforeStaminaRegenerates>5</SecondsBeforeStaminaRegenerates>
+  <MaximumMoveSpeedPercentStaminaRegenerates>0.1</MaximumMoveSpeedPercentStaminaRegenerates>
+  
+  <FullStaminaRemaining>1.0</FullStaminaRemaining>
   <HighStaminaRemaining>0.75</HighStaminaRemaining>
   <MediumStaminaRemaining>0.5</MediumStaminaRemaining>
   <LowStaminaRemaining>0.25</LowStaminaRemaining>
+  <NoStaminaRemaining>0.01</NoStaminaRemaining>
 </StaminaProperties>
