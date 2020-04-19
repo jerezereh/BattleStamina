@@ -1,0 +1,27 @@
+<Module>
+  <Name value="BattleStamina"/>
+  <Id value="BattleStamina"/>
+  <Version value="v0.1.0"/>
+  <SingleplayerModule value="true"/>
+  <MultiplayerModule value="false"/>
+  <DependedModules>
+    <DependedModule Id="Native"/>
+    <DependedModule Id="SandBoxCore"/>
+    <DependedModule Id="Sandbox"/>
+    <DependedModule Id="CustomBattle"/>
+    <DependedModule Id="StoryMode" />
+  </DependedModules>
+  <SubModules>
+    <SubModule>
+      <Name value="BattleStamina"/>
+      <DLLName value="BattleStamina.dll"/>
+      <SubModuleClassType value="BattleStamina.BattleStamina"/>
+      <Tags>
+        <Tag key="DedicatedServerType" value="none" />
+        <Tag key="IsNoRenderModeElement" value="false" />
+      </Tags>
+    </SubModule>
+  </SubModules>
+  <Xmls>
+  </Xmls>
+</Module>
