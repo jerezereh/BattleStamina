@@ -94,6 +94,25 @@ namespace BattleStamina.Patches
     }
 
 
+    [HarmonyPatch(typeof(Mission), "EndMission")]
+    class MissionOnEndMissionRequestPatch
+    {
+        public static void Postfix(Mission __instance)
+        {
+            ClearData();
+        }
+
+        private static void ClearData()
+        {
+            MissionOnTickPatch.AgentRecoveryTimers.Clear();
+            AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
+            AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Clear();
+            AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Clear();
+            MissionBuildAgentPatch.MaxStaminaPerAgent.Clear();
+        }
+    }
+
+
     [HarmonyPatch(typeof(Agent), "OnItemPickup")]
     class AgentOnItemPickupPatch
     {
@@ -121,7 +140,7 @@ namespace BattleStamina.Patches
             MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
             MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
 
-            if (affectorAgent.Character != null)
+            if (affectorAgent.Character != null && affectorAgent.IsActive())
             {
                 ItemObject itemFromWeaponKind = ItemObject.GetItemFromWeaponKind(affectorWeaponKind);
                 if (itemFromWeaponKind != null && itemFromWeaponKind.PrimaryWeapon.IsConsumable)
@@ -136,7 +155,7 @@ namespace BattleStamina.Patches
                 }
             }
 
-            if (affectedAgent.Character != null)
+            if (affectedAgent.Character != null && affectedAgent.IsActive())
             {
                 if (isBlocked)
                 {
