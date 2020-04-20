@@ -57,7 +57,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.0.0.9, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="0Harmony, Version=2.0.0.9, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\source\repos\UIExtenderLib\lib\0Harmony.dll</HintPath>
+    </Reference>
     <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
     <Reference Include="SandBox, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="SandBox.GauntletUI, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
@@ -121,8 +124,9 @@
     <Reference Include="TaleWorlds.Starter.Library, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.TwoDimension, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.TwoDimension.Standalone, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
-    <Reference Include="UIExtenderLib">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\0UIExtenderLibModule\bin\Win64_Shipping_Client\UIExtenderLib.dll</HintPath>
+    <Reference Include="UIExtenderLib_1.1.0, Version=1.1.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\source\repos\UIExtenderLib\UIExtenderLib\bin\Debug\UIExtenderLib_1.1.0.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -146,8 +150,8 @@
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\stamina_hud_icon.png" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Low.png" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Medium.png" />
-    <Content Include="Sprites\SpriteSheets\BattleStamina\BattleStamina_1.png" />
     <Content Include="ModuleData\Settings.xml" />
+    <Content Include="Sprites\SpriteSheets\BattleStamina\BattleStamina_1.png" />
     <Content Include="SubModule.xml">
       <SubType>Designer</SubType>
     </Content>

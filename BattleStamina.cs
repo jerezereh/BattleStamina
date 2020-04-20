@@ -17,6 +17,7 @@ namespace BattleStamina
     {
         public string version;
         public ResourceDepot resourceDepot = new ResourceDepot("../../Modules/BattleStamina/");
+        private UIExtender _uiExtender = new UIExtender("BattleStamina");
 
         protected override void OnSubModuleLoad()
         {
@@ -26,15 +27,15 @@ namespace BattleStamina
             version = reader.GetAttribute("value");
             InitializeSprites();
             LoadSprites();
-
             StaminaProperties.Instance = Helper.Deserialize<StaminaProperties>("../../Modules/BattleStamina/ModuleData/Settings.xml");
             new Harmony("mod.jrzrh.BattleStamina").PatchAll();
-            UIExtender.Register();
+            _uiExtender.Register();
         }
 
         protected override void OnBeforeInitialModuleScreenSetAsRoot()
         {
             InformationManager.DisplayMessage(new InformationMessage("Loaded BattleStamina " + version + ".", Color.FromUint(4282569842U)));
+            _uiExtender.Verify();
         }
 
         private void InitializeSprites()

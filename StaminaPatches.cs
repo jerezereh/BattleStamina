@@ -28,7 +28,7 @@ namespace BattleStamina.Patches
         {
             if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Continuing && !__instance.Paused)
             {
-                MissionBuildAgentPatch.MaxStaminaPerAgent.Keys.Except(AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
+                MissionSpawnAgentPatch.MaxStaminaPerAgent.Keys.Except(AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
                            .Where(x => x.IsActive() && x.Character != null && x.GetCurrentVelocity().Length <= x.GetMaximumSpeedLimit() * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
                            .ToList().ForEach(o => AgentRecoveryTimers[o]++);
 
@@ -49,7 +49,7 @@ namespace BattleStamina.Patches
                 foreach (Agent agent in AgentRecoveryTimers.Keys)
                 {
                     if (AgentRecoveryTimers[agent] > 60 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
-                        && AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[agent] / MissionBuildAgentPatch.MaxStaminaPerAgent[agent] < StaminaProperties.Instance.HighStaminaRemaining)
+                        && AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[agent] / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent] < StaminaProperties.Instance.HighStaminaRemaining)
                     {
                         double newStamina = AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[agent] + StaminaProperties.Instance.StaminaRecoveredPerTick;
                         AgentInitializeMissionEquipmentPatch.UpdateStamina(agent, newStamina, true);
@@ -112,7 +112,7 @@ namespace BattleStamina.Patches
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
             AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Clear();
             AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Clear();
-            MissionBuildAgentPatch.MaxStaminaPerAgent.Clear();
+            MissionSpawnAgentPatch.MaxStaminaPerAgent.Clear();
         }
     }
 
@@ -126,7 +126,7 @@ namespace BattleStamina.Patches
       bool removeWeapon)
         {
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[__instance][(int)weaponPickUpSlotIndex] = new Tuple<int, int>(spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.SwingSpeed, spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.ThrustSpeed);
-            MissionOnTickPatch.ChangeWeaponSpeeds(__instance, AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[__instance] / MissionBuildAgentPatch.MaxStaminaPerAgent[__instance]);
+            MissionOnTickPatch.ChangeWeaponSpeeds(__instance, AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[__instance] / MissionSpawnAgentPatch.MaxStaminaPerAgent[__instance]);
         }
     }
 
@@ -177,7 +177,7 @@ namespace BattleStamina.Patches
 
 
     [HarmonyPatch(typeof(Mission), "SpawnAgent")]
-    class MissionBuildAgentPatch
+    class MissionSpawnAgentPatch
     {
         public static Dictionary<Agent, double> MaxStaminaPerAgent = new Dictionary<Agent, double>();
         public static Agent heroAgent;
@@ -241,7 +241,7 @@ namespace BattleStamina.Patches
 
         public static void UpdateStamina(Agent agent, double newStamina, bool recovering = false)
         {
-            double oldStaminaRatio = CurrentStaminaPerAgent[agent] / MissionBuildAgentPatch.MaxStaminaPerAgent[agent];
+            double oldStaminaRatio = CurrentStaminaPerAgent[agent] / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent];
             double newStaminaRatio;
             bool changedTier;
 
@@ -250,9 +250,9 @@ namespace BattleStamina.Patches
 
             if (recovering)
             {
-                CurrentStaminaPerAgent[agent] = newStamina / MissionBuildAgentPatch.MaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ? 
-                    (StaminaProperties.Instance.HighStaminaRemaining * MissionBuildAgentPatch.MaxStaminaPerAgent[agent]) : newStamina;
-                newStaminaRatio = newStamina / MissionBuildAgentPatch.MaxStaminaPerAgent[agent];
+                CurrentStaminaPerAgent[agent] = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ? 
+                    (StaminaProperties.Instance.HighStaminaRemaining * MissionSpawnAgentPatch.MaxStaminaPerAgent[agent]) : newStamina;
+                newStaminaRatio = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent];
                 changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
 
                 if (agent.IsPlayerControlled)
@@ -283,7 +283,7 @@ namespace BattleStamina.Patches
             else
             {
                 CurrentStaminaPerAgent[agent] = newStamina > StaminaProperties.Instance.NoStaminaRemaining ? newStamina : StaminaProperties.Instance.NoStaminaRemaining;
-                newStaminaRatio = newStamina / MissionBuildAgentPatch.MaxStaminaPerAgent[agent];
+                newStaminaRatio = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent];
                 changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
 
                 if (agent.IsPlayerControlled)
@@ -367,7 +367,7 @@ namespace BattleStamina.Patches
             MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
             AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
-            MissionBuildAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
+            MissionSpawnAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
         }
     }
 
