@@ -1,0 +1,28 @@
+﻿<AgentHealthWidget Id="HeroStaminaWidget" Health="@HeroStamina" MaxHealth="@HeroStaminaMax" HealthBar="Canvas\FillBar" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="161" SuggestedHeight="26" HorizontalAlignment="Right" VerticalAlignment="Bottom" MarginBottom="65" MarginRight="90" ShowHealthBar="@ShowMountHealthBar" HealthDropContainer="Canvas\HealthDropContainer" HealthDropBrush="Mission.MainAgentHUD.MountHealthBar.FillChange">
+  <Children>
+    <Widget Id="Canvas" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.Canvas.Width" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.Canvas.Height" HorizontalAlignment="Left" VerticalAlignment="Center" Brush="Mission.MainAgentHUD.MountHealthBar.Canvas">
+      <Children>
+        <Widget Id="HealthDropContainer" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="12" VerticalAlignment="Center" PositionYOffset="-2" MarginRight="15" MarginTop="5">
+          <Children>
+          </Children>
+        </Widget>
+        <FillBarWidget Id="FillBar" ClipContents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.Fill.Height" VerticalAlignment="Center" PositionYOffset="-2" IsVertical="false" MarginLeft="14" MarginRight="17" MarginTop="5" FillWidget="FillVisualParent\FillVisual">
+          <Children>
+            <Widget Id="FillVisualParent" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="164">
+              <Children>
+                <Widget Id="FillVisual" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.Canvas.Width" HorizontalAlignment="Left" Brush="Mission.MainAgentHUD.MountHealthBar.Fill">
+                  <Children>
+                    <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.FillGlow.Width" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.FillGlow.Height" HorizontalAlignment="Right" VerticalAlignment="Center" Brush="Mission.MainAgentHUD.MountHealthBar.FillGlow" />
+                  </Children>
+                </Widget>
+              </Children>
+            </Widget>
+          </Children>
+        </FillBarWidget>
+      </Children>
+    </Widget>
+
+    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="Mission\stamina_frame" />
+    <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="44" SuggestedHeight="44" VerticalAlignment="Center" HorizontalAlignment="Left" PositionXOffset="-12" PositionYOffset="8" Sprite="Mission\stamina_hud_icon"/>
+  </Children>
+</AgentHealthWidget>

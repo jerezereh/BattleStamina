@@ -5,10 +5,17 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using TaleWorlds.Core;
+using TaleWorlds.Engine;
+using TaleWorlds.Engine.GauntletUI;
+using TaleWorlds.Engine.Screens;
 using TaleWorlds.GauntletUI;
+using TaleWorlds.GauntletUI.Data;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.MountAndBlade.GauntletUI;
+using TaleWorlds.MountAndBlade.ViewModelCollection.Multiplayer;
 using TaleWorlds.TwoDimension;
+using UIExtenderLib;
 
 namespace BattleStamina.Patches
 {
@@ -364,17 +371,31 @@ namespace BattleStamina.Patches
         }
     }
 
-    
-    [HarmonyPatch(typeof(BrushFactory), MethodType.Constructor, new Type[] { typeof(ResourceDepot), typeof(string), typeof(SpriteData), typeof(FontFactory) })]
-    class DebugPatch
-    {
-        public static void Postfix(BrushFactory __instance,
-      ResourceDepot resourceDepot,
-      string resourceFolder,
-      SpriteData spriteData,
-      FontFactory fontFactory)
-        {
-            Console.WriteLine("");
-        }
-    }
+
+    //[HarmonyPatch(typeof(MissionGauntletAgentStatus), "_dataSource", MethodType.Setter)]
+    //class DebugPatch
+    //{
+    //    public static void Postfix(MissionGauntletAgentStatus __instance, MissionAgentStatusVM ____dataSource)
+    //    {
+    //        ____dataSource = new MissionStaminaVM((Mission)____dataSource.GetField("_mission"), (Camera)____dataSource.GetField("_missionCamera"));
+    //        //return false;
+    //    }
+    //}
+
+
+    //[HarmonyPatch(typeof(MissionGauntletAgentStatus), "EarlyStart")]
+    //class DebugPatch2
+    //{
+    //    public static void Prefix(MissionGauntletAgentStatus __instance, MissionAgentStatusVM ____dataSource, GauntletLayer ____gauntletLayer)
+    //    {
+    //        //base.EarlyStart();
+    //        ____dataSource = new MissionAgentStatusVM(__instance.Mission, __instance.MissionScreen.CombatCamera);
+    //        ____gauntletLayer = new GauntletLayer(__instance.ViewOrderPriorty, "GauntletLayer");
+    //        ____gauntletLayer.LoadMovie("MainAgentHUD", (ViewModel)____dataSource);
+    //        __instance.MissionScreen.AddLayer((ScreenLayer)____gauntletLayer);
+    //        ____dataSource.TakenDamageController.SetIsEnabled(BannerlordConfig.EnableDamageTakenVisuals);
+    //        CombatLogManager.OnGenerateCombatLog += new CombatLogManager.OnPrintCombatLogHandler(Delegate.CreateDelegate(null, __instance, __instance.GetMethod("OnGenerateCombatLog")));
+    //        ManagedOptions.OnManagedOptionChanged += new ManagedOptions.OnManagedOptionChangedDelegate(__instance.Call("OnManagedOptionChanged"));
+    //    }
+    //}
 }

@@ -25,7 +25,7 @@ namespace BattleStamina
         public double LowestSpeedFromStaminaDebuff { get; set; } = 0.5;
         public double StaminaRecoveredPerTick { get; set; } = 0.08;
         public double SecondsBeforeStaminaRegenerates { get; set; } = 5;
-        public double MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.1;
+        public double MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.5;
 
         public double FullStaminaRemaining { get; set; } = 1.0;
         public double HighStaminaRemaining { get; set; } = 0.75;

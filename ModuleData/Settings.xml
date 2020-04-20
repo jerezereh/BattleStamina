@@ -13,7 +13,7 @@
   <LowestSpeedFromStaminaDebuff>0.5</LowestSpeedFromStaminaDebuff>
   <StaminaRecoveredPerTick>0.08</StaminaRecoveredPerTick>
   <SecondsBeforeStaminaRegenerates>5</SecondsBeforeStaminaRegenerates>
-  <MaximumMoveSpeedPercentStaminaRegenerates>0.1</MaximumMoveSpeedPercentStaminaRegenerates>
+  <MaximumMoveSpeedPercentStaminaRegenerates>0.5</MaximumMoveSpeedPercentStaminaRegenerates>
   
   <FullStaminaRemaining>1.0</FullStaminaRemaining>
   <HighStaminaRemaining>0.75</HighStaminaRemaining>

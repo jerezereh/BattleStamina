@@ -22,6 +22,12 @@ namespace BattleStamina
             return null;
         }
 
+        internal static MethodInfo GetMethod(this object o, string methodName, params object[] args)
+        {
+            MethodInfo method = o.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+            return method;
+        }
+
         internal static object GetField(this object o, string fieldName)
         {
             FieldInfo field = o.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);

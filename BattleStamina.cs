@@ -9,6 +9,7 @@ using TaleWorlds.Engine.GauntletUI;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.TwoDimension;
+using UIExtenderLib;
 
 namespace BattleStamina
 {
@@ -27,15 +28,8 @@ namespace BattleStamina
             LoadSprites();
 
             StaminaProperties.Instance = Helper.Deserialize<StaminaProperties>("../../Modules/BattleStamina/ModuleData/Settings.xml");
-
-            try
-            {
-                new Harmony("mod.jrzrh.BattleStamina").PatchAll();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error initializing Harmony patches:\n\n" + ex);
-            }
+            new Harmony("mod.jrzrh.BattleStamina").PatchAll();
+            UIExtender.Register();
         }
 
         protected override void OnBeforeInitialModuleScreenSetAsRoot()

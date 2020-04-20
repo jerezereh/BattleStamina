@@ -1,20 +1,17 @@
 ﻿using BattleStamina.Patches;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TaleWorlds.Engine;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.MountAndBlade.ViewModelCollection.Multiplayer;
 
 namespace BattleStamina
 {
-    class MissionStaminaVM : ViewModel
+    class MissionStaminaVM : MissionAgentStatusVM
     {
         private double _heroStamina;
         private double _heroStaminaMax;
 
-        public MissionStaminaVM()
+        public MissionStaminaVM(Mission mission, Camera missionCamera) : base(mission, missionCamera)
         {
             _heroStamina = MissionBuildAgentPatch.MaxStaminaPerAgent[MissionBuildAgentPatch.heroAgent];
             _heroStaminaMax = MissionBuildAgentPatch.MaxStaminaPerAgent[MissionBuildAgentPatch.heroAgent];
