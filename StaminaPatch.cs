@@ -2,10 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using TaleWorlds.Core;
+using TaleWorlds.GauntletUI;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.TwoDimension;
 
 namespace BattleStamina.Patches
 {
@@ -45,6 +48,10 @@ namespace BattleStamina.Patches
                         AgentInitializeMissionEquipmentPatch.UpdateStamina(agent, newStamina, true);
                     }
                 }
+            }
+            else if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Over)
+            {
+                ClearData();
             }
         }
 
@@ -90,6 +97,15 @@ namespace BattleStamina.Patches
         public static void ChangeMoveSpeed(Agent agent, double speedMultiplier)
         {
             agent.SetMaximumSpeedLimit((float)speedMultiplier, true);
+        }
+
+        private static void ClearData()
+        {
+            AgentRecoveryTimers.Clear();
+            AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
+            AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Clear();
+            AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Clear();
+            MissionBuildAgentPatch.MaxStaminaPerAgent.Clear();
         }
     }
 
@@ -157,6 +173,7 @@ namespace BattleStamina.Patches
     class MissionBuildAgentPatch
     {
         public static Dictionary<Agent, double> MaxStaminaPerAgent = new Dictionary<Agent, double>();
+        public static Agent heroAgent;
 
         public static void Postfix(Mission __instance,
       AgentBuildData agentBuildData,
@@ -180,6 +197,9 @@ namespace BattleStamina.Patches
                 AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Add(__result, fullStamina);
             }
             MissionOnTickPatch.AgentRecoveryTimers.Add(__result, 0);
+
+            if (__result.IsPlayerControlled)
+                heroAgent = __result;
         }
     }
 
@@ -237,7 +257,7 @@ namespace BattleStamina.Patches
                     }
                     else if (newStaminaRatio > StaminaProperties.Instance.LowStaminaRemaining && BelowLowStamina)
                     {
-                        Print("Your muscles ache! You're feeling winded!", new Color(1.0f, 0.83f, 0.0f)); // yellow
+                        Print("Your heart calms! You're feeling winded!", new Color(1.0f, 0.83f, 0.0f)); // yellow
                         BelowLowStamina = false;
                     }
                     else if (newStaminaRatio > StaminaProperties.Instance.MediumStaminaRemaining && BelowMediumStamina)
@@ -341,6 +361,20 @@ namespace BattleStamina.Patches
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
             AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
             MissionBuildAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
+        }
+    }
+
+    
+    [HarmonyPatch(typeof(BrushFactory), MethodType.Constructor, new Type[] { typeof(ResourceDepot), typeof(string), typeof(SpriteData), typeof(FontFactory) })]
+    class DebugPatch
+    {
+        public static void Postfix(BrushFactory __instance,
+      ResourceDepot resourceDepot,
+      string resourceFolder,
+      SpriteData spriteData,
+      FontFactory fontFactory)
+        {
+            Console.WriteLine("");
         }
     }
 }

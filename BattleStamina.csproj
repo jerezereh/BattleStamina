@@ -65,6 +65,10 @@
     <Reference Include="SandBox.ViewModelCollection, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -102,6 +106,7 @@
     <Reference Include="TaleWorlds.MountAndBlade.Diamond, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.MountAndBlade.GauntletUI.Widgets, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.MountAndBlade.Helpers, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
+    <Reference Include="TaleWorlds.MountAndBlade.View, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.MountAndBlade.ViewModelCollection, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.NavigationSystem, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.Network, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
@@ -117,22 +122,43 @@
     <Reference Include="TaleWorlds.TwoDimension.Standalone, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AgentStaminaWidget.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="BattleStamina.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="MissionStaminaVM.cs" />
     <Compile Include="StaminaPatch.cs" />
     <Compile Include="StaminaProperties.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="GUI\Brushes\Mission.xml" />
+    <Content Include="GUI\Prefabs\Mission\AgentStatus.xml" />
+    <Content Include="Sprites\spriteData.xml" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Default.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Empty.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\stamina_frame.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Full.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_High.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\stamina_hud_icon.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Low.png" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Medium.png" />
+    <Content Include="Sprites\SpriteSheets\BattleStamina\BattleStamina_1.png" />
     <Content Include="ModuleData\Settings.xml" />
     <Content Include="SubModule.xml">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /y "$(ProjectDir)SubModule.xml" "$(OutDir)/../.."
-xcopy /y "$(ProjectDir)ModuleData" "$(OutDir)/../../ModuleData"</PostBuildEvent>
+xcopy /y "$(ProjectDir)ModuleData" "$(OutDir)/../../ModuleData"
+xcopy /y /s /e "$(ProjectDir)Sprites" "$(OutDir)/../../Sprites"
+xcopy /y /s /e "$(ProjectDir)GUI" "$(OutDir)/../../GUI"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
