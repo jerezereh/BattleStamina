@@ -60,7 +60,8 @@ namespace BattleStamina
         {
             if (MissionSpawnAgentPatch.heroAgent != null)
             {
-                HeroStamina = (int)AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
+                int currentStamina = (int)AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
+                HeroStamina = currentStamina > 0 ? currentStamina : 1;
                 HeroStaminaMax = (int)MissionSpawnAgentPatch.MaxStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
             }
         }

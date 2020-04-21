@@ -2,20 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using TaleWorlds.Core;
-using TaleWorlds.Engine;
-using TaleWorlds.Engine.GauntletUI;
-using TaleWorlds.Engine.Screens;
-using TaleWorlds.GauntletUI;
-using TaleWorlds.GauntletUI.Data;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.MountAndBlade.GauntletUI;
-using TaleWorlds.MountAndBlade.ViewModelCollection.Multiplayer;
-using TaleWorlds.TwoDimension;
-using UIExtenderLib;
 
 namespace BattleStamina.Patches
 {
@@ -29,25 +19,26 @@ namespace BattleStamina.Patches
             if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Continuing && !__instance.Paused)
             {
                 MissionSpawnAgentPatch.MaxStaminaPerAgent.Keys.Except(AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
-                           .Where(x => x.IsActive() && x.Character != null && x.GetCurrentVelocity().Length <= x.GetMaximumSpeedLimit() * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
+                           .Where(x => x.IsActive() && x.Character != null)
                            .ToList().ForEach(o => AgentRecoveryTimers[o]++);
 
-                // each tick update first X agents that need to be updated
-                for (int i = 0; i < 10; i++)
+                if (!AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.IsEmpty())
                 {
-                    if (!AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.IsEmpty())
+                    Tuple<Agent, double> tuple = AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Dequeue();
+                    if (tuple.Item1.IsActive())
                     {
-                        Tuple<Agent, double> tuple = AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Dequeue();
-                        if (tuple.Item1.IsActive())
-                        {
-                            ChangeWeaponSpeeds(tuple.Item1, tuple.Item2);
-                            ChangeMoveSpeed(tuple.Item1, tuple.Item2);
-                        }
+                        ChangeWeaponSpeeds(tuple.Item1, tuple.Item2);
+                        ChangeMoveSpeed(tuple.Item1, tuple.Item2);
                     }
                 }
 
-                foreach (Agent agent in AgentRecoveryTimers.Keys)
+                foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
                 {
+                    if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
+                    {
+                        AgentRecoveryTimers[agent] = 0;
+                    }
+
                     if (AgentRecoveryTimers[agent] > 60 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
                         && AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[agent] / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent] < StaminaProperties.Instance.HighStaminaRemaining)
                     {
@@ -55,10 +46,6 @@ namespace BattleStamina.Patches
                         AgentInitializeMissionEquipmentPatch.UpdateStamina(agent, newStamina, true);
                     }
                 }
-            }
-            else if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Over)
-            {
-                ClearData();
             }
         }
 
@@ -69,7 +56,7 @@ namespace BattleStamina.Patches
 
             for (int i = 0; i < 4; i++)
             {
-                if (!(agent.Equipment[i].CurrentUsageItem == null))
+                if (agent.Equipment[i].CurrentUsageItem != null)
                 {
                     PropertyInfo property = typeof(WeaponComponentData).GetProperty("SwingSpeed");
                     property.DeclaringType.GetProperty("SwingSpeed");
@@ -101,40 +88,38 @@ namespace BattleStamina.Patches
                 agent.TryToWieldWeaponInSlot(offIndex, Agent.WeaponWieldActionType.Instant, true);
         }
 
-        public static void ChangeMoveSpeed(Agent agent, double speedMultiplier)
+        public static void ChangeMoveSpeed(Agent agent, double speedMultiplier, bool multiplier = false)
         {
-            agent.SetMaximumSpeedLimit((float)speedMultiplier, true);
+            float newSpeed = agent.GetMaximumSpeedLimit() * (float)speedMultiplier;
+            newSpeed = newSpeed > 0 ? newSpeed : 0;
+            agent.SetMaximumSpeedLimit(newSpeed, multiplier);
         }
 
-        private static void ClearData()
+        public static void Cleanup()
         {
+            if (MissionSpawnAgentPatch.heroAgent != null)
+            {
+                ChangeWeaponSpeeds(MissionSpawnAgentPatch.heroAgent, 1.0);
+                ChangeMoveSpeed(MissionSpawnAgentPatch.heroAgent, MissionSpawnAgentPatch.heroAgent.MaximumForwardUnlimitedSpeed, false);
+            }
+
             AgentRecoveryTimers.Clear();
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
             AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Clear();
             AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Clear();
             MissionSpawnAgentPatch.MaxStaminaPerAgent.Clear();
+            MissionSpawnAgentPatch.heroAgent = null;
         }
     }
-
 
     [HarmonyPatch(typeof(Mission), "EndMission")]
     class MissionOnEndMissionRequestPatch
     {
         public static void Postfix(Mission __instance)
         {
-            ClearData();
-        }
-
-        private static void ClearData()
-        {
-            MissionOnTickPatch.AgentRecoveryTimers.Clear();
-            AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
-            AgentInitializeMissionEquipmentPatch.AgentsToBeUpdated.Clear();
-            AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Clear();
-            MissionBuildAgentPatch.MaxStaminaPerAgent.Clear();
+            MissionOnTickPatch.Cleanup();
         }
     }
-
 
     [HarmonyPatch(typeof(Agent), "OnItemPickup")]
     class AgentOnItemPickupPatch
@@ -148,7 +133,6 @@ namespace BattleStamina.Patches
             MissionOnTickPatch.ChangeWeaponSpeeds(__instance, AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent[__instance] / MissionSpawnAgentPatch.MaxStaminaPerAgent[__instance]);
         }
     }
-
 
     [HarmonyPatch(typeof(Mission), "OnAgentHit")]
     class MissionOnAgentHitPatch
@@ -194,7 +178,6 @@ namespace BattleStamina.Patches
         }
     }
 
-
     [HarmonyPatch(typeof(Mission), "SpawnAgent")]
     class MissionSpawnAgentPatch
     {
@@ -225,10 +208,11 @@ namespace BattleStamina.Patches
             MissionOnTickPatch.AgentRecoveryTimers.Add(__result, 0);
 
             if (__result.IsPlayerControlled)
+            {
                 heroAgent = __result;
+            }
         }
     }
-
 
     [HarmonyPatch(typeof(Agent), "InitializeMissionEquipment")]
     class AgentInitializeMissionEquipmentPatch
@@ -246,7 +230,6 @@ namespace BattleStamina.Patches
         public static void Postfix(Agent __instance)
         {
             List<Tuple<int, int>> equipmentList = new List<Tuple<int, int>>();
-            // only adds one weapon per agent to AgentOriginalWeaponSpeed dictionary
             for (int i = 0; i < 4; i++)
             {
                 if (!(__instance.Equipment[i].CurrentUsageItem == null))
@@ -269,7 +252,7 @@ namespace BattleStamina.Patches
 
             if (recovering)
             {
-                CurrentStaminaPerAgent[agent] = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ? 
+                CurrentStaminaPerAgent[agent] = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ?
                     (StaminaProperties.Instance.HighStaminaRemaining * MissionSpawnAgentPatch.MaxStaminaPerAgent[agent]) : newStamina;
                 newStaminaRatio = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent];
                 changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
@@ -373,48 +356,18 @@ namespace BattleStamina.Patches
         }
     }
 
-
-    [HarmonyPatch(typeof(Mission), "OnAgentRemoved")]
-    class MissionOnAgentRemovedPatch
+    [HarmonyPatch(typeof(Mission), "OnAgentAddedAsCorpse")]
+    class MissionOnAgentAddedAsCorpsePatch
     {
-        public static void Postfix(Mission __instance,
-      Agent affectedAgent,
-      Agent affectorAgent,
-      AgentState agentState,
-      KillingBlow killingBlow)
+        public static void Postfix(Mission __instance, Agent affectedAgent)
         {
-            MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
-            AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
-            AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
-            MissionSpawnAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
+            if (affectedAgent != MissionSpawnAgentPatch.heroAgent)
+            {
+                MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
+                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
+                AgentInitializeMissionEquipmentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
+                MissionSpawnAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
+            }
         }
     }
-
-
-    //[HarmonyPatch(typeof(MissionGauntletAgentStatus), "_dataSource", MethodType.Setter)]
-    //class DebugPatch
-    //{
-    //    public static void Postfix(MissionGauntletAgentStatus __instance, MissionAgentStatusVM ____dataSource)
-    //    {
-    //        ____dataSource = new MissionStaminaVM((Mission)____dataSource.GetField("_mission"), (Camera)____dataSource.GetField("_missionCamera"));
-    //        //return false;
-    //    }
-    //}
-
-
-    //[HarmonyPatch(typeof(MissionGauntletAgentStatus), "EarlyStart")]
-    //class DebugPatch2
-    //{
-    //    public static void Prefix(MissionGauntletAgentStatus __instance, MissionAgentStatusVM ____dataSource, GauntletLayer ____gauntletLayer)
-    //    {
-    //        //base.EarlyStart();
-    //        ____dataSource = new MissionAgentStatusVM(__instance.Mission, __instance.MissionScreen.CombatCamera);
-    //        ____gauntletLayer = new GauntletLayer(__instance.ViewOrderPriorty, "GauntletLayer");
-    //        ____gauntletLayer.LoadMovie("MainAgentHUD", (ViewModel)____dataSource);
-    //        __instance.MissionScreen.AddLayer((ScreenLayer)____gauntletLayer);
-    //        ____dataSource.TakenDamageController.SetIsEnabled(BannerlordConfig.EnableDamageTakenVisuals);
-    //        CombatLogManager.OnGenerateCombatLog += new CombatLogManager.OnPrintCombatLogHandler(Delegate.CreateDelegate(null, __instance, __instance.GetMethod("OnGenerateCombatLog")));
-    //        ManagedOptions.OnManagedOptionChanged += new ManagedOptions.OnManagedOptionChangedDelegate(__instance.Call("OnManagedOptionChanged"));
-    //    }
-    //}
 }

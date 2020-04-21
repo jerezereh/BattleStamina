@@ -1,6 +1,6 @@
 ﻿<AgentHealthWidget Id="HeroStaminaWidget" Health="@HeroStamina" MaxHealth="@HeroStaminaMax" HealthBar="Canvas\FillBar" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="159" SuggestedHeight="26" HorizontalAlignment="Right" VerticalAlignment="Bottom" MarginBottom="65" MarginRight="90" ShowHealthBar="@ShowAgentHealthBar" HealthDropContainer="Canvas\HealthDropContainer" HealthDropBrush="Mission.MainAgentHUD.ShieldHealthBar.FillChange">
   <Children>
-    <Widget Id="Canvas" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.Canvas.Width" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.Canvas.Height" HorizontalAlignment="Left" VerticalAlignment="Center" Brush="Mission.MainAgentHUD.MountHealthBar.Canvas">
+    <Widget Id="Canvas" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="159" SuggestedHeight="26" HorizontalAlignment="Left" VerticalAlignment="Center" Sprite="Mission\stamina_canvas">
       <Children>
         <Widget Id="HealthDropContainer" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="12" VerticalAlignment="Center" PositionYOffset="-2" MarginRight="15" MarginTop="5">
           <Children>

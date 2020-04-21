@@ -130,18 +130,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AgentStaminaWidget.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="BattleStamina.cs" />
     <Compile Include="HeroStaminaBar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MissionStaminaVM.cs" />
     <Compile Include="StaminaPatches.cs" />
     <Compile Include="StaminaProperties.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="GUI\PrefabExtensions\HeroStaminaBar.xml" />
     <Content Include="Sprites\spriteData.xml" />
+    <Content Include="Sprites\SpriteParts\BattleStamina\Mission\stamina_canvas.png" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Default.png" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Empty.png" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\stamina_frame.png" />
