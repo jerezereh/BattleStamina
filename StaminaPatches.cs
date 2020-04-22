@@ -24,11 +24,6 @@ namespace BattleStamina.Patches
                            .Where(x => x.IsActive() && x.Character != null)
                            .ToList().ForEach(o => AgentRecoveryTimers[o]++);
 
-                //if (MissionSpawnAgentPatch.heroAgent != null && MissionSpawnAgentPatch.heroAgent.IsActive())
-                //{
-
-                //}
-
                 if (!MissionSpawnAgentPatch.AgentsToBeUpdated.IsEmpty())
                 {
                     Tuple<Agent, double> tuple = MissionSpawnAgentPatch.AgentsToBeUpdated.Dequeue();
@@ -41,15 +36,13 @@ namespace BattleStamina.Patches
 
                 foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
                 {
-                    if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
-                    {
-                        AgentRecoveryTimers[agent] = 0;
-                    }
-
                     if (AgentRecoveryTimers[agent] > 60 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
                         && MissionSpawnAgentPatch.GetCurrentStaminaRatio(agent) < StaminaProperties.Instance.HighStaminaRemaining)
                     {
-                        MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTick, true);
+                        if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
+                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTickMoving, true);
+                        else
+                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTickResting, true);
                     }
                 }
             }
@@ -186,11 +179,11 @@ namespace BattleStamina.Patches
                 ItemObject itemFromWeaponKind = ItemObject.GetItemFromWeaponKind(affectorWeaponKind);
                 if (itemFromWeaponKind != null && itemFromWeaponKind.PrimaryWeapon.IsConsumable)
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
                 }
                 else
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
                 }
             }
 
@@ -279,7 +272,7 @@ namespace BattleStamina.Patches
 
         private static void UpdateStamina(Agent agent, double newStamina, bool recovering = false)
         {
-            double oldStaminaRatio = CurrentStaminaPerAgent[agent] / MaxStaminaPerAgent[agent];
+            double oldStaminaRatio = GetCurrentStaminaRatio(agent);
             double newStaminaRatio;
             bool changedTier;
 

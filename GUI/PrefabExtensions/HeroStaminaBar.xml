@@ -6,11 +6,11 @@
           <Children>
           </Children>
         </Widget>
-        <FillBarWidget Id="FillBar" ClipContents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.Fill.Height" VerticalAlignment="Center" PositionYOffset="-2" IsVertical="false" MarginLeft="14" MarginRight="17" MarginTop="5" FillWidget="FillVisualParent\FillVisual">
+        <FillBarWidget Id="FillBar" ClipContents="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="129" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.Fill.Height" VerticalAlignment="Center" PositionYOffset="-2" IsVertical="false" MarginLeft="14" MarginRight="17" MarginTop="5" FillWidget="FillVisualParent\FillVisual">
           <Children>
-            <Widget Id="FillVisualParent" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="164">
+            <Widget Id="FillVisualParent" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="129">
               <Children>
-                <Widget Id="FillVisual" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.Canvas.Width" HorizontalAlignment="Left" Brush="Mission.MainAgentHUD.ShieldHealthBar.Fill">
+                <Widget Id="FillVisual" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="129" HorizontalAlignment="Left" Brush="Mission.MainAgentHUD.ShieldHealthBar.Fill">
                   <Children>
                     <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.FillGlow.Width" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.FillGlow.Height" HorizontalAlignment="Right" VerticalAlignment="Center" Brush="Mission.MainAgentHUD.MountHealthBar.FillGlow" />
                   </Children>

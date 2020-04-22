@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using ModLib;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -22,12 +23,20 @@ namespace BattleStamina
         protected override void OnSubModuleLoad()
         {
             base.OnSubModuleLoad();
+
             XmlReader reader = XmlReader.Create("../../Modules/BattleStamina/SubModule.xml");
             reader.ReadToDescendant("Version");
             version = reader.GetAttribute("value");
+
             InitializeSprites();
             LoadSprites();
-            StaminaProperties.Instance = Helper.Deserialize<StaminaProperties>("../../Modules/BattleStamina/ModuleData/Settings.xml");
+
+            FileDatabase.Initialise("BattleStamina");
+            StaminaProperties settings = FileDatabase.Get<StaminaProperties>(StaminaProperties.InstanceID);
+            if (settings == null)
+                settings = new StaminaProperties();
+            SettingsDatabase.RegisterSettings(settings);
+
             new Harmony("mod.jrzrh.BattleStamina").PatchAll();
             _uiExtender.Register();
         }
