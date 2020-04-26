@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿#undef DEBUG
+
+using HarmonyLib;
 using SandBox;
 using System;
 using System.Collections.Generic;
@@ -11,12 +13,12 @@ using TaleWorlds.MountAndBlade;
 
 namespace BattleStamina.Patches
 {
-    [HarmonyPatch(typeof(MissionState), "OnTick")]
+    [HarmonyPatch(typeof(MissionState), "TickMission")]
     class MissionOnTickPatch
     {
         public static Dictionary<Agent, int> AgentRecoveryTimers = new Dictionary<Agent, int>();
 
-        public static void Postfix(MissionState __instance)
+        public static void Postfix(MissionState __instance, float realDt)
         {
             if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Continuing && !__instance.Paused)
             {
@@ -29,8 +31,8 @@ namespace BattleStamina.Patches
                     Tuple<Agent, double> tuple = MissionSpawnAgentPatch.AgentsToBeUpdated.Dequeue();
                     if (tuple.Item1.IsActive())
                     {
-                        ChangeWeaponSpeeds(tuple.Item1, tuple.Item2);
-                        ChangeMoveSpeed(tuple.Item1, tuple.Item2);
+                        ChangeWeaponSpeedsHandler(tuple.Item1, tuple.Item2);
+                        //ChangeMoveSpeed(tuple.Item1, tuple.Item2);
                     }
                 }
 
@@ -48,52 +50,79 @@ namespace BattleStamina.Patches
             }
         }
 
-        public static void ChangeWeaponSpeeds(Agent agent, double speedMultiplier)
+        public static void ChangeWeaponSpeedsHandler(Agent agent, double speedMultiplier, bool requip = true)
         {
-            if (agent != null && agent.IsActive())
+            // get currently wielded weapon(s) and index(es)
+            MissionWeapon equipped = agent.WieldedWeapon;
+            MissionWeapon offhandEquipped = agent.WieldedOffhandWeapon;
+            EquipmentIndex mainIndex = EquipmentIndex.None;
+            EquipmentIndex offIndex = EquipmentIndex.None;
+            if (equipped.CurrentUsageItem != null)
+                mainIndex = agent.GetWieldedItemIndex(Agent.HandIndex.MainHand);
+            if (offhandEquipped.CurrentUsageItem != null)
+                offIndex = agent.GetWieldedItemIndex(Agent.HandIndex.OffHand);
+
+            for (int i = 0; i < 4; i++)
             {
-                speedMultiplier = (speedMultiplier * (1 - StaminaProperties.Instance.LowestSpeedFromStaminaDebuff)) + StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
-                speedMultiplier = speedMultiplier > StaminaProperties.Instance.LowestSpeedFromStaminaDebuff ? speedMultiplier : StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
+                MissionWeapon currentWeapon = agent.Equipment[i];
 
-                for (int i = 0; i < 4; i++)
+                ChangeWeaponSpeed(agent, i, speedMultiplier, currentWeapon);
+                if (requip)
+                    RequipWeapon(agent, i, currentWeapon, mainIndex, offIndex);
+            }
+        }
+
+        public static void ChangeWeaponSpeed(Agent agent, int i, double speedMultiplier, MissionWeapon weapon)
+        {
+            // normalize speed multiplier between 100% and minimum set in properties and ensure speed multiplier above minimum
+            speedMultiplier = (speedMultiplier * (1 - StaminaProperties.Instance.LowestSpeedFromStaminaDebuff)) + StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
+            speedMultiplier = speedMultiplier > StaminaProperties.Instance.LowestSpeedFromStaminaDebuff ? speedMultiplier : StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
+
+            if (agent != null && weapon.CurrentUsageItem != null)
+            {
+                try
                 {
-                    if (agent.Equipment[i].CurrentUsageItem != null)
-                    {
-                        try
-                        {
-                            PropertyInfo property = typeof(WeaponComponentData).GetProperty("SwingSpeed");
-                            property.DeclaringType.GetProperty("SwingSpeed");
-                            property.SetValue(agent.Equipment[i].PrimaryItem.PrimaryWeapon,
-                                (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item1 * speedMultiplier, MidpointRounding.AwayFromZero),
-                                BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
+                    // change speed value by multiplier
+                    PropertyInfo property = typeof(WeaponComponentData).GetProperty("SwingSpeed");
+                    property.DeclaringType.GetProperty("SwingSpeed");
+                    property.SetValue(weapon.PrimaryItem.PrimaryWeapon,
+                        (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item1 * speedMultiplier, MidpointRounding.AwayFromZero),
+                        BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
 
-                            property = typeof(WeaponComponentData).GetProperty("ThrustSpeed");
-                            property.DeclaringType.GetProperty("ThrustSpeed");
-                            property.SetValue(agent.Equipment[i].PrimaryItem.PrimaryWeapon,
-                                (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item2 * speedMultiplier, MidpointRounding.AwayFromZero),
-                                BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
-                        }
-                        catch (InvalidOperationException)
-                        {
-
-                        }
-                    }
+                    property = typeof(WeaponComponentData).GetProperty("ThrustSpeed");
+                    property.DeclaringType.GetProperty("ThrustSpeed");
+                    property.SetValue(weapon.PrimaryItem.PrimaryWeapon,
+                        (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item2 * speedMultiplier, MidpointRounding.AwayFromZero),
+                        BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
                 }
+                catch (InvalidOperationException)
+                {
+#if DEBUG
+                    InformationManager.DisplayMessage(new InformationMessage("Caught InvalidOperationException in ChangeWeaponSpeeds!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
+                }
+                catch (KeyNotFoundException)
+                {
+#if DEBUG
+                    InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in ChangeWeaponSpeeds!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
+                }
+            }
+        }
 
-                MissionWeapon equipped = agent.WieldedWeapon;
-                MissionWeapon offhandEquipped = agent.WieldedOffhandWeapon;
-                EquipmentIndex mainIndex = EquipmentIndex.None;
-                EquipmentIndex offIndex = EquipmentIndex.None;
-                if (equipped.CurrentUsageItem != null)
-                    mainIndex = agent.GetWieldedItemIndex(Agent.HandIndex.MainHand);
-                if (offhandEquipped.CurrentUsageItem != null)
-                    offIndex = agent.GetWieldedItemIndex(Agent.HandIndex.OffHand);
+        public static void RequipWeapon(Agent agent, int index, MissionWeapon weapon, EquipmentIndex mainIndex, EquipmentIndex offIndex)
+        {
+            // reset weapon to set new speed
+            agent.EquipWeaponWithNewEntity((EquipmentIndex)index, ref weapon);
 
-                agent.EquipItemsFromSpawnEquipment();
-                if (mainIndex != EquipmentIndex.None && equipped.CurrentUsageItem != null)
-                    agent.TryToWieldWeaponInSlot(mainIndex, Agent.WeaponWieldActionType.Instant, true);
-                if (offIndex != EquipmentIndex.None && offhandEquipped.CurrentUsageItem != null)
-                    agent.TryToWieldWeaponInSlot(offIndex, Agent.WeaponWieldActionType.Instant, true);
+            // if weapon was currently equipped, re-equip it
+            if (mainIndex != EquipmentIndex.None && index == (int)mainIndex)
+            {
+                agent.TryToWieldWeaponInSlot(mainIndex, Agent.WeaponWieldActionType.Instant, true);
+            }
+            if (offIndex != EquipmentIndex.None && index == (int)offIndex)
+            {
+                agent.TryToWieldWeaponInSlot(offIndex, Agent.WeaponWieldActionType.Instant, true);
             }
         }
 
@@ -108,8 +137,8 @@ namespace BattleStamina.Patches
         {
             if (MissionSpawnAgentPatch.heroAgent != null)
             {
-                ChangeWeaponSpeeds(MissionSpawnAgentPatch.heroAgent, 1.0);
-                ChangeMoveSpeed(MissionSpawnAgentPatch.heroAgent, MissionSpawnAgentPatch.heroAgent.MaximumForwardUnlimitedSpeed, false);
+                ChangeWeaponSpeedsHandler(MissionSpawnAgentPatch.heroAgent, 1.0, false);
+                //ChangeMoveSpeed(MissionSpawnAgentPatch.heroAgent, MissionSpawnAgentPatch.heroAgent.MaximumForwardUnlimitedSpeed, false);
             }
 
             AgentRecoveryTimers.Clear();
@@ -156,8 +185,17 @@ namespace BattleStamina.Patches
       EquipmentIndex weaponPickUpSlotIndex,
       bool removeWeapon)
         {
-            AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[__instance][(int)weaponPickUpSlotIndex] = new Tuple<int, int>(spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.SwingSpeed, spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.ThrustSpeed);
-            MissionOnTickPatch.ChangeWeaponSpeeds(__instance, MissionSpawnAgentPatch.GetCurrentStaminaRatio(__instance));
+            try
+            {
+                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[__instance][(int)weaponPickUpSlotIndex] = new Tuple<int, int>(spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.SwingSpeed, spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.ThrustSpeed);
+                MissionOnTickPatch.ChangeWeaponSpeedsHandler(__instance, MissionSpawnAgentPatch.GetCurrentStaminaRatio(__instance));
+            }
+            catch (KeyNotFoundException)
+            {
+#if DEBUG
+                InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in AgentOnItemPickupPatch!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
+            }
         }
     }
 
@@ -171,8 +209,8 @@ namespace BattleStamina.Patches
       bool isBlocked,
       int damage)
         {
-            MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
             MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
+            MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
 
             if (affectorAgent.Character != null && affectorAgent.IsActive())
             {
@@ -192,7 +230,7 @@ namespace BattleStamina.Patches
                 if (isBlocked)
                 {
 
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, StaminaProperties.Instance.StaminaCostToBlock);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damage * StaminaProperties.Instance.StaminaCostPerBlockedDamage);
                 }
                 else
                 {
@@ -251,8 +289,11 @@ namespace BattleStamina.Patches
             {
                 return CurrentStaminaPerAgent[agent] / MaxStaminaPerAgent[agent];
             }
-            catch
+            catch (KeyNotFoundException)
             {
+#if DEBUG
+                InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in GetCurrentStaminaRatio!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
                 return 0.0;
             }
         }
@@ -266,7 +307,9 @@ namespace BattleStamina.Patches
             }
             catch (KeyNotFoundException)
             {
-
+#if DEBUG
+                InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in UpdateStaminaHandler!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
             }
         }
 
@@ -379,7 +422,7 @@ namespace BattleStamina.Patches
             return false;
         }
 
-        private static void Print(string message, Color color)
+        public static void Print(string message, Color color)
         {
             InformationManager.DisplayMessage(new InformationMessage(message, color, "Combat"));
         }
@@ -405,12 +448,14 @@ namespace BattleStamina.Patches
         }
     }
 
-    [HarmonyPatch(typeof(Mission), "OnAgentAddedAsCorpse")]
-    class MissionOnAgentAddedAsCorpsePatch
+    [HarmonyPatch(typeof(BattleAgentLogic), "OnAgentRemoved")]
+    class MissionOnAgentRemovedPatch
     {
-        public static void Postfix(Mission __instance, Agent affectedAgent)
+        public static void Postfix(BattleAgentLogic __instance, Agent affectedAgent,
+      Agent affectorAgent,
+      AgentState agentState,
+      KillingBlow killingBlow)
         {
-            // need to reset weapons' speeds on agent death
             if (affectedAgent != MissionSpawnAgentPatch.heroAgent)
             {
                 AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
@@ -418,6 +463,24 @@ namespace BattleStamina.Patches
                 MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
                 MissionSpawnAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
             }
+            else
+            {
+                // need to reset weapons' speeds on agent death
+                MissionOnTickPatch.ChangeWeaponSpeedsHandler(affectedAgent, 1.0, false);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Mission), "SpawnAttachedWeaponOnCorpse")]
+    class AgentGetEquipmentPatch
+    {
+
+        public static bool Prefix(Mission __instance,
+      Agent agent,
+      int attachedWeaponIndex,
+      int forcedSpawnIndex)
+        {
+            return false;
         }
     }
 }

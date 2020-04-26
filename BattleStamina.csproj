@@ -118,6 +118,7 @@
     <Reference Include="TaleWorlds.MountAndBlade.ViewModelCollection, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.NavigationSystem, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.Network, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
+    <Reference Include="TaleWorlds.ObjectSystem, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="TaleWorlds.PlatformService, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.PlatformService.Epic, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
     <Reference Include="TaleWorlds.PlatformService.Steam, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64" />
@@ -142,7 +143,9 @@
     <Compile Include="StaminaProperties.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GUI\PrefabExtensions\HeroStaminaBar.xml" />
+    <Content Include="GUI\Brushes\Mission.xml" />
+    <Content Include="GUI\PrefabExtensions\HeroStaminaBarMounted.xml" />
+    <Content Include="GUI\PrefabExtensions\HeroStaminaBarDismounted.xml" />
     <Content Include="Sprites\spriteData.xml" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\stamina_canvas.png" />
     <Content Include="Sprites\SpriteParts\BattleStamina\Mission\Stamina_Default.png" />

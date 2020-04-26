@@ -1,4 +1,4 @@
-﻿<AgentHealthWidget Id="HeroStaminaWidget" Health="@HeroStamina" MaxHealth="@HeroStaminaMax" HealthBar="Canvas\FillBar" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="159" SuggestedHeight="26" HorizontalAlignment="Right" VerticalAlignment="Bottom" MarginBottom="65" MarginRight="90" ShowHealthBar="@ShowAgentHealthBar" HealthDropContainer="Canvas\HealthDropContainer" HealthDropBrush="Mission.MainAgentHUD.ShieldHealthBar.FillChange">
+﻿<AgentHealthWidget Id="HeroStaminaWidgetMounted" Health="@HeroStamina" MaxHealth="@HeroStaminaMax" HealthBar="Canvas\FillBar" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="159" SuggestedHeight="26" HorizontalAlignment="Right" VerticalAlignment="Bottom" MarginBottom="65" MarginRight="90" ShowHealthBar="@ShowMountHealthBar" HealthDropContainer="Canvas\HealthDropContainer" HealthDropBrush="Mission.MainAgentHUD.ShieldHealthBar.FillChange">
   <Children>
     <Widget Id="Canvas" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="159" SuggestedHeight="26" HorizontalAlignment="Left" VerticalAlignment="Center" Sprite="Mission\stamina_canvas">
       <Children>
@@ -10,7 +10,7 @@
           <Children>
             <Widget Id="FillVisualParent" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="129">
               <Children>
-                <Widget Id="FillVisual" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="129" HorizontalAlignment="Left" Brush="Mission.MainAgentHUD.ShieldHealthBar.Fill">
+                <Widget Id="FillVisual" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="129" HorizontalAlignment="Left" Brush="Mission.MainAgentHUD.StaminaBar.Fill">
                   <Children>
                     <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="!Mission.MainAgentHUD.MountHealthBar.FillGlow.Width" SuggestedHeight="!Mission.MainAgentHUD.MountHealthBar.FillGlow.Height" HorizontalAlignment="Right" VerticalAlignment="Center" Brush="Mission.MainAgentHUD.MountHealthBar.FillGlow" />
                   </Children>

@@ -7,10 +7,17 @@ using UIExtenderLib.Interface;
 namespace BattleStamina
 {
     [PrefabExtension("AgentStatus", "descendant::AgentHealthWidget[@Id='HorseHealthWidget']")]
-    class HeroStaminaBar : PrefabExtensionInsertAsSiblingPatch
+    class HeroStaminaWidgetMounted : PrefabExtensionInsertAsSiblingPatch
     {
         public override InsertType Type => InsertType.Prepend;
-        public override string Name => "HeroStaminaBar";
+        public override string Name => "HeroStaminaBarMounted";
+    }
+
+    [PrefabExtension("AgentStatus", "descendant::AgentHealthWidget[@Id='HorseHealthWidget']")]
+    class HeroStaminaWidgetDismounted : PrefabExtensionInsertAsSiblingPatch
+    {
+        public override InsertType Type => InsertType.Prepend;
+        public override string Name => "HeroStaminaBarDismounted";
     }
 
 
