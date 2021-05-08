@@ -1,4 +1,4 @@
-﻿#undef DEBUG
+﻿//#undef DEBUG
 
 using HarmonyLib;
 using SandBox;
@@ -29,16 +29,25 @@ namespace BattleStamina.Patches
                 if (!MissionSpawnAgentPatch.AgentsToBeUpdated.IsEmpty())
                 {
                     Tuple<Agent, double> tuple = MissionSpawnAgentPatch.AgentsToBeUpdated.Dequeue();
-                    if (tuple.Item1.IsActive())
-                    {
-                        ChangeWeaponSpeedsHandler(tuple.Item1, tuple.Item2);
-                        //ChangeMoveSpeed(tuple.Item1, tuple.Item2);
-                    }
+
+                    // if Agent is currently not attacking, update weapon speed
+                    //if (tuple.Item1.AttackDirection == Agent.UsageDirection.None) {
+                        if (tuple.Item1.IsActive())
+                        {
+                            ChangeWeaponSpeedsHandler(tuple.Item1, tuple.Item2);
+                            //ChangeMoveSpeed(tuple.Item1, tuple.Item2);
+                        }
+                    //}
+                    //else
+                    //{
+                    //    // else add them to end of queue so they don't block
+                    //    MissionSpawnAgentPatch.AgentsToBeUpdated.Enqueue(tuple);
+                    //}
                 }
 
                 foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
                 {
-                    if (AgentRecoveryTimers[agent] > 60 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
+                    if (AgentRecoveryTimers[agent] > 120 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
                         && MissionSpawnAgentPatch.GetCurrentStaminaRatio(agent) < StaminaProperties.Instance.HighStaminaRemaining)
                     {
                         if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
@@ -85,13 +94,13 @@ namespace BattleStamina.Patches
                     // change speed value by multiplier
                     PropertyInfo property = typeof(WeaponComponentData).GetProperty("SwingSpeed");
                     property.DeclaringType.GetProperty("SwingSpeed");
-                    property.SetValue(weapon.PrimaryItem.PrimaryWeapon,
+                    property.SetValue(weapon.CurrentUsageItem,
                         (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item1 * speedMultiplier, MidpointRounding.AwayFromZero),
                         BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
 
                     property = typeof(WeaponComponentData).GetProperty("ThrustSpeed");
                     property.DeclaringType.GetProperty("ThrustSpeed");
-                    property.SetValue(weapon.PrimaryItem.PrimaryWeapon,
+                    property.SetValue(weapon.CurrentUsageItem,
                         (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item2 * speedMultiplier, MidpointRounding.AwayFromZero),
                         BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
                 }
@@ -187,7 +196,8 @@ namespace BattleStamina.Patches
         {
             try
             {
-                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[__instance][(int)weaponPickUpSlotIndex] = new Tuple<int, int>(spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.SwingSpeed, spawnedItemEntity.WeaponCopy.PrimaryItem.PrimaryWeapon.ThrustSpeed);
+                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[__instance][(int)weaponPickUpSlotIndex] = 
+                    new Tuple<int, int>(spawnedItemEntity.WeaponCopy.CurrentUsageItem.SwingSpeed, spawnedItemEntity.WeaponCopy.CurrentUsageItem.ThrustSpeed);
                 MissionOnTickPatch.ChangeWeaponSpeedsHandler(__instance, MissionSpawnAgentPatch.GetCurrentStaminaRatio(__instance));
             }
             catch (KeyNotFoundException)
@@ -205,36 +215,46 @@ namespace BattleStamina.Patches
         public static void Postfix(Mission __instance,
       Agent affectedAgent,
       Agent affectorAgent,
-      int affectorWeaponKind,
+      int affectorWeaponSlotOrMissileIndex,
+      bool isMissile,
       bool isBlocked,
-      int damage)
+      int damage,
+      float movementSpeedDamageModifier,
+      float hitDistance,
+      AgentAttackType attackType,
+      BoneBodyPartType victimHitBodyPart)
         {
-            MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
-            MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
-
-            if (affectorAgent.Character != null && affectorAgent.IsActive())
+            if (MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectorAgent) && MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectedAgent) && affectorAgent != affectedAgent)
             {
-                ItemObject itemFromWeaponKind = ItemObject.GetItemFromWeaponKind(affectorWeaponKind);
-                if (itemFromWeaponKind != null && itemFromWeaponKind.PrimaryWeapon.IsConsumable)
-                {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
-                }
-                else
-                {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
-                }
-            }
+                MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
+                MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
 
-            if (affectedAgent.Character != null && affectedAgent.IsActive())
-            {
-                if (isBlocked)
+                if (affectorAgent.Character != null && affectorAgent.IsActive())
                 {
-
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damage * StaminaProperties.Instance.StaminaCostPerBlockedDamage);
+                    if (isMissile)
+                    {
+#if DEBUG
+                        InformationManager.DisplayMessage(new InformationMessage(((Dictionary<int, Mission.Missile>)Helper.GetField(__instance, "_missiles"))[affectorWeaponSlotOrMissileIndex].Weapon.Item.Name.ToString(), new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
+                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
+                    }
+                    else
+                    {
+                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
+                    }
                 }
-                else
+
+                if (affectedAgent.Character != null && affectedAgent.IsActive())
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damage * StaminaProperties.Instance.StaminaCostPerReceivedDamage);
+                    if (isBlocked)
+                    {
+
+                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damage * StaminaProperties.Instance.StaminaCostPerBlockedDamage);
+                    }
+                    else
+                    {
+                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damage * StaminaProperties.Instance.StaminaCostPerReceivedDamage);
+                    }
                 }
             }
         }
@@ -439,7 +459,7 @@ namespace BattleStamina.Patches
             for (int i = 0; i < 4; i++)
             {
                 if (!(__instance.Equipment[i].CurrentUsageItem == null))
-                    equipmentList.Add(new Tuple<int, int>(__instance.Equipment[i].PrimaryItem.PrimaryWeapon.SwingSpeed, __instance.Equipment[i].PrimaryItem.PrimaryWeapon.ThrustSpeed));
+                    equipmentList.Add(new Tuple<int, int>(__instance.Equipment[i].CurrentUsageItem.SwingSpeed, __instance.Equipment[i].CurrentUsageItem.ThrustSpeed));
                 else
                     equipmentList.Add(new Tuple<int, int>(0, 0));
             }

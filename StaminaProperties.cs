@@ -51,25 +51,25 @@ namespace BattleStamina
         //public readonly double MoveCost { get; set; } = 0.5;
 
         [XmlElement]
-        [SettingProperty("Lowest Speed from Stamina Debuff", 0f, 1.0f, "The maximum speed loss when a character runs out of stamina (0% is no debuff, 100% is all speed lost)")]
-        public float LowestSpeedFromStaminaDebuff { get; set; } = 0.33f;
+        [SettingProperty("Lowest Speed from Stamina Debuff", 0f, 1.0f, "The maximum percent speed loss when a character runs out of stamina")]
+        public float LowestSpeedFromStaminaDebuff { get; set; } = 0.5f;
 
         [XmlElement]
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingProperty("Stamina Recovered per Tick while Moving", 0f, 1f, "The amount of stamina regained per game tick when above 'Regen Maximum Move Speed' (there are about 60 ticks per second)")]
-        public float StaminaRecoveredPerTickMoving { get; set; } = 0.4f;
+        [SettingProperty("Stamina Recovered per Tick while Moving", 0f, 1f, "The amount of stamina regained per game tick when above 'Regen Maximum Move Speed' (there are about 60-120 ticks per second)")]
+        public float StaminaRecoveredPerTickMoving { get; set; } = 0.2f;
         [XmlElement]
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingProperty("Stamina Recovered per Tick while Resting", 0f, 1f, "The amount of stamina regained per game tick when below 'Regen Maximum Move Speed' (there are about 60 ticks per second)")]
-        public float StaminaRecoveredPerTickResting { get; set; } = 1.0f;
+        [SettingProperty("Stamina Recovered per Tick while Resting", 0f, 1f, "The amount of stamina regained per game tick when below 'Regen Maximum Move Speed' (there are about 60-120 ticks per second)")]
+        public float StaminaRecoveredPerTickResting { get; set; } = 0.5f;
         [XmlElement]
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingProperty("Seconds before Stamina Regenerates", 0, 10, "The estimated amount of time before stamina begins to regenerate")]
+        [SettingProperty("Seconds before Stamina Regenerates", 0, 10, "The estimated amount of seconds before stamina begins to regenerate")]
         public float SecondsBeforeStaminaRegenerates { get; set; } = 2.5f;
         [XmlElement]
         [SettingPropertyGroup("Stamina Regeneration")]
         [SettingProperty("Regen Maximum Move Speed", 0.1f, 1f, "The move speed percent above which stamina regeneration will be reduced (10% requires standing still, 100% will allow full regeneration while moving at any speed)")]
-        public float MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.8f;
+        public float MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.5f;
 
         [XmlElement]
         public float FullStaminaRemaining { get; set; } = 1.0f;

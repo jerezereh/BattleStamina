@@ -1,23 +1,19 @@
 ﻿using HarmonyLib;
 using ModLib;
-using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
 using System.Xml;
 using TaleWorlds.Core;
-using TaleWorlds.Engine;
 using TaleWorlds.Engine.GauntletUI;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.TwoDimension;
-using UIExtenderLib;
+using Bannerlord.UIExtenderEx;
 
 namespace BattleStamina
 {
     public class BattleStamina : MBSubModuleBase
     {
         public string version;
-        public ResourceDepot resourceDepot = new ResourceDepot("../../Modules/BattleStamina/");
+        public ResourceDepot resourceDepot = new ResourceDepot();
         private UIExtender _uiExtender = new UIExtender("BattleStamina");
 
         protected override void OnSubModuleLoad()
@@ -38,18 +34,18 @@ namespace BattleStamina
             SettingsDatabase.RegisterSettings(settings);
 
             new Harmony("mod.jrzrh.BattleStamina").PatchAll();
-            _uiExtender.Register();
+            _uiExtender.Register(typeof(BattleStamina).Assembly);
         }
 
         protected override void OnBeforeInitialModuleScreenSetAsRoot()
         {
             InformationManager.DisplayMessage(new InformationMessage("Loaded BattleStamina " + version + ".", Color.FromUint(4282569842U)));
-            _uiExtender.Verify();
+            _uiExtender.Enable();
         }
 
         private void InitializeSprites()
         {
-            resourceDepot.AddLocation("Sprites/");
+            resourceDepot.AddLocation("../../Modules/BattleStamina/", "Sprites/");
             resourceDepot.CollectResources();
             UIResourceManager.SpriteData.Load(resourceDepot);
         }

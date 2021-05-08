@@ -114,7 +114,7 @@
       </Style>
     </Styles>
   </Brush>
-  
+
   <Brush Name="NameMarker.IssueBrush">
     <Layers>
       <BrushLayer Name="None" Sprite="Icons\icon_issue_active" IsHidden="true" />
@@ -216,6 +216,21 @@
   <Brush Name="PeerMarker.TextBrush" FontSize="24" Font="FiraSansExtraCondensed-Regular">
     <Styles>
       <Style Name="Default" FontColor="#FFFFFFFF" TextGlowColor="#000000FF" TextOutlineColor="#00000000" TextOutlineAmount="0.0" TextSoftBorder="0" TextGlowRadius="0" TextBlur="0"/>
+    </Styles>
+  </Brush>
+
+  <Brush Name="PeerMarker.Visual">
+    <Layers>
+      <BrushLayer Name="Default" Sprite="BlankWhiteSquare_9" Color="#00000000" IsHidden="true" />
+      <BrushLayer Name="Dead" Sprite="Mission\PersonalKillfeed\kill_icon" Color="#CB0707FF" IsHidden="true" />
+    </Layers>
+    <Styles>
+      <Style Name="Default">
+        <BrushLayer Name="Default" IsHidden="false" />
+      </Style>
+      <Style Name="Dead">
+        <BrushLayer Name="Dead" IsHidden="false" />
+      </Style>
     </Styles>
   </Brush>
 
@@ -358,6 +373,43 @@
     </Styles>
   </Brush>
 
+  <Brush Name="Mission.AgentLock.Visual">
+    <Layers>
+      <BrushLayer Name="Default" Sprite="Mission\agent_lock"/>
+    </Layers>
+    <Styles>
+      <Style Name="Default">
+      </Style>
+      <Style Name="Active">
+        <BrushLayer Name="Default" Color="#CF2D2DFF"/>
+      </Style>
+      <Style Name="Possible">
+        <BrushLayer Name="Default" Color="#DECB9BFF"/>
+      </Style>
+    </Styles>
+  </Brush>
+
+  <Brush Name="Mission.Agent.SpearBrace.State">
+    <Layers>
+      <BrushLayer Name="ConditionsNotMet" Sprite="Mission\spear-brace-deactive" Color="#F3DCB8FF" AlphaFactor="1" IsHidden="true" />
+      <BrushLayer Name="Possible" Sprite="Mission\spear-brace-deactive" Color="#F3DCB8FF" IsHidden="true" />
+      <BrushLayer Name="Active" Sprite="Mission\spear-brace-active" Color="#F3DCB8FF" IsHidden="true" />
+    </Layers>
+    <Styles>
+      <Style Name="Default">
+      </Style>
+      <Style Name="Active">
+        <BrushLayer Name="Active" IsHidden="false" />
+      </Style>
+      <Style Name="Possible">
+        <BrushLayer Name="Possible" IsHidden="false" />
+      </Style>
+      <Style Name="ConditionsNotMet">
+        <BrushLayer Name="ConditionsNotMet" IsHidden="true" />
+      </Style>
+    </Styles>
+  </Brush>
+
   <Brush Name="PlayerRoleSelection.OuterFrame" TransitionDuration="0.070">
     <Layers>
       <BrushLayer Name="Default" Sprite="Crafting\left_card_frame_default" IsHidden="true" ExtendBottom="18" ExtendLeft="18" ExtendRight="18" ExtendTop="18"/>
@@ -470,7 +522,7 @@
 
   <Brush Name="Mission.MainAgentHUD.MountHealthBar.Fill">
     <Layers>
-      <BrushLayer Name="DefaultFill" Sprite="mission_health_bar_fill_small_9" HueFactor="27" />
+      <BrushLayer Name="DefaultFill" Sprite="mission_health_bar_fill_small_9" Color="#FFFFFFFF" />
     </Layers>
     <Styles>
       <Style Name="Default">
@@ -598,7 +650,7 @@
       </Style>
     </Styles>
   </Brush>
-  
+
   <Brush Name="SPHUD.KillNotification.MessageText" Font="FiraSansExtraCondensed-Regular" TextHorizontalAlignment="Center" TextVerticalAlignment="Center">
     <Styles>
       <Style Name="Default" FontColor="#FFFFFFFF" TextBlur="0" TextOutlineAmount="0.4" TextGlowRadius="0" FontSize="24" />
