@@ -51,7 +51,7 @@ namespace BattleStamina
         //public readonly double MoveCost { get; set; } = 0.5;
 
         [XmlElement]
-        [SettingProperty("Lowest Speed from Stamina Debuff", 0f, 1.0f, "The maximum percent speed loss when a character runs out of stamina")]
+        [SettingProperty("Lowest Speed from Stamina Debuff", 0f, 1.0f, "The minimum speed (percentage) a character will attack at when they run out of stamina")]
         public float LowestSpeedFromStaminaDebuff { get; set; } = 0.5f;
 
         [XmlElement]
@@ -68,7 +68,7 @@ namespace BattleStamina
         public float SecondsBeforeStaminaRegenerates { get; set; } = 2.5f;
         [XmlElement]
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingProperty("Regen Maximum Move Speed", 0.1f, 1f, "The move speed percent above which stamina regeneration will be reduced (10% requires standing still, 100% will allow full regeneration while moving at any speed)")]
+        [SettingProperty("Regen Maximum Move Speed", 0.1f, 1f, "The move speed (percentage) above which stamina regeneration will be reduced (10% requires standing still, 100% will allow full regeneration while moving at any speed)")]
         public float MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.5f;
 
         [XmlElement]
@@ -84,6 +84,10 @@ namespace BattleStamina
 
         [XmlElement]
         public bool NoStaminaRemainingStopsAttacks { get; set; } = false;
+
+        [XmlElement]
+        [SettingProperty("Stamina Affects Crush Through", "Toggle if stamina affects crush through. If on, characters with less than Low stamina will always have their blocks crushed through while characters with High stamina cannot be crushed though.")]
+        public bool StaminaAffectsCrushThrough { get; set; } = true;
 
         public static StaminaProperties Instance
         {
