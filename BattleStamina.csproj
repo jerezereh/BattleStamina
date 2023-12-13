@@ -96,44 +96,30 @@
     <Folder Include="ModuleData\" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.Harmony\bin\Win64_Shipping_Client\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\Bannerlord.Lib.Harmony.2.2.2\ref\netstandard2.0\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="Bannerlord.ButterLib">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Bannerlord.ButterLib.dll</HintPath>
+    <Reference Include="Bannerlord.ButterLib, Version=1.0.21.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Gaming.Desktop.x64_Shipping_Client\Bannerlord.ButterLib.dll</HintPath>
     </Reference>
-    <Reference Include="Bannerlord.UIExtenderEx">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.UIExtenderEx\bin\Win64_Shipping_Client\Bannerlord.UIExtenderEx.dll</HintPath>
+    <Reference Include="Bannerlord.UIExtenderEx, Version=2.1.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.UIExtenderEx\bin\Gaming.Desktop.x64_Shipping_Client\Bannerlord.UIExtenderEx.dll</HintPath>
     </Reference>
-    <Reference Include="MBOptionScreen">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MBOptionScreen.dll</HintPath>
+    <Reference Include="MCM.UI.Adapter.MCMv5">
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCM.UI.Adapter.MCMv5.dll</HintPath>
     </Reference>
-    <Reference Include="MBOptionScreen.v2.0.10">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MBOptionScreen.v2.0.10.dll</HintPath>
+    <Reference Include="MCMv5, Version=5.9.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>packages\Bannerlord.MCM.5.9.1\lib\netstandard2.0\MCMv5.dll</HintPath>
     </Reference>
-    <Reference Include="MCMv3">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv3.dll</HintPath>
+    <Reference Include="MCMv5.UI">
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv5.UI.dll</HintPath>
     </Reference>
-    <Reference Include="MCMv4">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.dll</HintPath>
-    </Reference>
-    <Reference Include="MCMv4.Adapter.MBO">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.Adapter.MBO.dll</HintPath>
-    </Reference>
-    <Reference Include="MCMv4.Adapter.MCMv3">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.Adapter.MCMv3.dll</HintPath>
-    </Reference>
-    <Reference Include="MCMv4.Adapter.ModLib">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.Adapter.ModLib.dll</HintPath>
-    </Reference>
-    <Reference Include="MCMv4.UI">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="ModLib">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\ModLib.dll</HintPath>
-    </Reference>
-    <Reference Include="SandBox">
-      <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\SandBox\bin\Win64_Shipping_Client\SandBox.dll</HintPath>
+    <Reference Include="SandBox, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\SandBox\bin\Win64_Shipping_Client\SandBox.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
@@ -213,6 +199,9 @@
     <Reference Include="TaleWorlds.TwoDimension.Standalone">
       <HintPath>I:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.TwoDimension.Standalone.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Bannerlord.MCM" Version="5.0.0" IncludeAssets="compile" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

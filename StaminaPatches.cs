@@ -1,7 +1,8 @@
 ﻿#undef DEBUG
 
 using HarmonyLib;
-using SandBox;
+using SandBox.GameComponents;
+using SandBox.Missions.MissionLogics.Arena;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,11 @@ namespace BattleStamina.Patches
     {
         public static Dictionary<Agent, int> AgentRecoveryTimers = new Dictionary<Agent, int>();
 
-        public static void Postfix(MissionState __instance, float realDt)
+        public static void Postfix(MissionState __instance)
         {
             if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Continuing && !__instance.Paused)
             {
-                MissionSpawnAgentPatch.MaxStaminaPerAgent.Keys.Except(MissionSpawnAgentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
+                MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Keys.Except(MissionSpawnAgentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
                            .Where(x => x.IsActive() && x.Character != null)
                            .ToList().ForEach(o => AgentRecoveryTimers[o]++);
 
@@ -30,26 +31,21 @@ namespace BattleStamina.Patches
                 {
                     Tuple<Agent, double> tuple = MissionSpawnAgentPatch.AgentsToBeUpdated.Dequeue();
 
-                    // if Agent is currently not attacking, update weapon speed
-                    //if (tuple.Item1.AttackDirection == Agent.UsageDirection.None) {
-                        if (tuple.Item1.IsActive())
-                        {
-                            ChangeWeaponSpeedsHandler(tuple.Item1, tuple.Item2);
-                            //ChangeMoveSpeed(tuple.Item1, tuple.Item2);
-                        }
-                    //}
-                    //else
-                    //{
-                    //    // else add them to end of queue so they don't block
-                    //    MissionSpawnAgentPatch.AgentsToBeUpdated.Enqueue(tuple);
-                    //}
+                    if (tuple.Item1.IsActive())
+                    {
+                        ChangeWeaponSpeedsHandler(tuple.Item1, tuple.Item2);
+                        //ChangeMoveSpeed(tuple.Item1, tuple.Item2);
+                    }
                 }
 
                 foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
                 {
-                    if (AgentRecoveryTimers[agent] > 60 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
-                        && MissionSpawnAgentPatch.GetCurrentStaminaRatio(agent) < StaminaProperties.Instance.HighStaminaRemaining)
+                    if (AgentRecoveryTimers[agent] > 120 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
+                        && MissionSpawnAgentPatch.GetCurrentStaminaRatio(agent) < MissionSpawnAgentPatch.CurrentMaxStaminaPerAgent[agent]
+                    )
                     {
+                        AgentRecoveryTimers[agent] = 0;
+
                         if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
                             MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTickMoving, true);
                         else
@@ -75,9 +71,14 @@ namespace BattleStamina.Patches
             {
                 MissionWeapon currentWeapon = agent.Equipment[i];
 
-                if (currentWeapon.Item != null)
+                if (currentWeapon.Item != null && !currentWeapon.CurrentUsageItem.IsRangedWeapon)
                 {
-                    ChangeWeaponSpeed(agent, i, speedMultiplier, currentWeapon);
+                    // normalize speed multiplier between 100% and minimum set in properties and ensure speed multiplier above minimum
+                    speedMultiplier = (speedMultiplier * (1 - StaminaProperties.Instance.LowestSpeedFromStaminaDebuff)) + StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
+                    double newSwingSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item1 * speedMultiplier;
+                    double newThrustSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item2 * speedMultiplier;
+
+                    ChangeWeaponSpeed(agent, i, newSwingSpeed, newThrustSpeed, currentWeapon);
                     if (requip)
                     {
                         RequipWeapon(agent, i, currentWeapon, mainIndex, offIndex);
@@ -86,28 +87,26 @@ namespace BattleStamina.Patches
             }
         }
 
-        public static void ChangeWeaponSpeed(Agent agent, int i, double speedMultiplier, MissionWeapon weapon)
+        public static void ChangeWeaponSpeed(Agent agent, int i, double newSwingSpeed, double newThrustSpeed, MissionWeapon weapon)
         {
-            // normalize speed multiplier between 100% and minimum set in properties and ensure speed multiplier above minimum
-            speedMultiplier = (speedMultiplier * (1 - StaminaProperties.Instance.LowestSpeedFromStaminaDebuff)) + StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
-            speedMultiplier = speedMultiplier > StaminaProperties.Instance.LowestSpeedFromStaminaDebuff ? speedMultiplier : StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
-
             if (agent != null && weapon.CurrentUsageItem != null)
             {
                 try
                 {
-                    // change speed value by multiplier
                     PropertyInfo property = typeof(WeaponComponentData).GetProperty("SwingSpeed");
                     property.DeclaringType.GetProperty("SwingSpeed");
                     property.SetValue(weapon.CurrentUsageItem,
-                        (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item1 * speedMultiplier, MidpointRounding.AwayFromZero),
+                        (int)Math.Round(newSwingSpeed, MidpointRounding.AwayFromZero),
                         BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
-
+#if DEBUG
+                    InformationManager.DisplayMessage(new InformationMessage("New speed: " + property.GetValue(weapon.CurrentUsageItem), new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
                     property = typeof(WeaponComponentData).GetProperty("ThrustSpeed");
                     property.DeclaringType.GetProperty("ThrustSpeed");
                     property.SetValue(weapon.CurrentUsageItem,
-                        (int)Math.Round(AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item2 * speedMultiplier, MidpointRounding.AwayFromZero),
+                        (int)Math.Round(newThrustSpeed, MidpointRounding.AwayFromZero),
                         BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
+
                 }
                 catch (InvalidOperationException)
                 {
@@ -161,9 +160,24 @@ namespace BattleStamina.Patches
 
         public static void Cleanup()
         {
-            if (MissionSpawnAgentPatch.heroAgent != null)
+            Agent agent = MissionSpawnAgentPatch.heroAgent;
+
+            if (agent != null)
             {
-                ChangeWeaponSpeedsHandler(MissionSpawnAgentPatch.heroAgent, 1.0, false);
+                for (int i = 0; i < 4; i++)
+                {
+                    MissionWeapon currentWeapon = agent.Equipment[i];
+
+                    if (currentWeapon.Item != null)
+                    {
+                        // normalize speed multiplier between 100% and minimum set in properties and ensure speed multiplier above minimum
+                        double newSwingSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item1;
+                        double newThrustSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent][i].Item2;
+
+                        ChangeWeaponSpeed(agent, i, newSwingSpeed, newThrustSpeed, currentWeapon);
+                    }
+                }
+
                 //ChangeMoveSpeed(MissionSpawnAgentPatch.heroAgent, MissionSpawnAgentPatch.heroAgent.MaximumForwardUnlimitedSpeed, false);
             }
 
@@ -171,7 +185,7 @@ namespace BattleStamina.Patches
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
             MissionSpawnAgentPatch.AgentsToBeUpdated.Clear();
             MissionSpawnAgentPatch.CurrentStaminaPerAgent.Clear();
-            MissionSpawnAgentPatch.MaxStaminaPerAgent.Clear();
+            MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Clear();
             MissionSpawnAgentPatch.heroAgent = null;
         }
     }
@@ -192,15 +206,6 @@ namespace BattleStamina.Patches
         {
             MissionOnTickPatch.Cleanup();
         }
-    }
-
-    [HarmonyPatch(typeof(ArenaPracticeFightMissionController), "StartPlayerPractice")]
-    class ArenaPracticeFightMissionControllerStartPlayerPracticePatch
-    {
-        //public static void Postfix(ArenaPracticeFightMissionController __instance)
-        //{
-        //    MissionOnTickPatch.Cleanup();
-        //}
     }
 
     [HarmonyPatch(typeof(Agent), "OnItemPickup")]
@@ -242,13 +247,6 @@ namespace BattleStamina.Patches
       AgentAttackType attackType,
       BoneBodyPartType victimHitBodyPart)
         {
-//#if DEBUG
-//            InformationManager.DisplayMessage(new InformationMessage("onAgentHit " + affectorAgent.Name + " hit " + affectedAgent.Name, new Color(1.00f, 0.38f, 0.01f), "Debug"));
-//            InformationManager.DisplayMessage(new InformationMessage(MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectorAgent) + " " +
-//                MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectedAgent) + " " +
-//                (affectorAgent != affectedAgent), new Color(1.00f, 0.38f, 0.01f), "Debug"));
-//#endif
-
             if (MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectorAgent) && MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectedAgent) && affectorAgent != affectedAgent)
             {
                 MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
@@ -286,7 +284,8 @@ namespace BattleStamina.Patches
     class MissionSpawnAgentPatch
     {
         public static Queue<Tuple<Agent, double>> AgentsToBeUpdated = new Queue<Tuple<Agent, double>>();
-        public static Dictionary<Agent, double> MaxStaminaPerAgent = new Dictionary<Agent, double>();
+        public static Dictionary<Agent, double> OriginalMaxStaminaPerAgent = new Dictionary<Agent, double>();
+        public static Dictionary<Agent, double> CurrentMaxStaminaPerAgent = new Dictionary<Agent, double>();
         public static Dictionary<Agent, double> CurrentStaminaPerAgent = new Dictionary<Agent, double>();
         public static Agent heroAgent;
 
@@ -314,7 +313,8 @@ namespace BattleStamina.Patches
                     agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Throwing) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
                     agentBuildData.AgentCharacter.Level * StaminaProperties.Instance.StaminaGainedPerLevel;
 
-                MaxStaminaPerAgent.Add(__result, fullStamina);
+                OriginalMaxStaminaPerAgent.Add(__result, fullStamina);
+                CurrentMaxStaminaPerAgent.Add(__result, fullStamina);
                 CurrentStaminaPerAgent.Add(__result, fullStamina);
             }
 #if DEBUG
@@ -333,7 +333,7 @@ namespace BattleStamina.Patches
         {
             try
             {
-                return CurrentStaminaPerAgent[agent] / MaxStaminaPerAgent[agent];
+                return CurrentStaminaPerAgent[agent] / OriginalMaxStaminaPerAgent[agent];
             }
             catch (KeyNotFoundException)
             {
@@ -349,7 +349,7 @@ namespace BattleStamina.Patches
             try
             {
                 double newStamina = recovering ? CurrentStaminaPerAgent[agent] + staminaDelta : CurrentStaminaPerAgent[agent] - staminaDelta;
-                UpdateStamina(agent, newStamina, recovering);
+                UpdateStamina(agent, newStamina < 0 ? 0 : newStamina, recovering);
             }
             catch (KeyNotFoundException)
             {
@@ -370,9 +370,9 @@ namespace BattleStamina.Patches
 
             if (recovering)
             {
-                CurrentStaminaPerAgent[agent] = newStamina / MaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ?
-                    (StaminaProperties.Instance.HighStaminaRemaining * MaxStaminaPerAgent[agent]) : newStamina;
-                newStaminaRatio = newStamina / MaxStaminaPerAgent[agent];
+                CurrentStaminaPerAgent[agent] = newStamina / OriginalMaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ?
+                    (StaminaProperties.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent]) : newStamina;
+                newStaminaRatio = newStamina / OriginalMaxStaminaPerAgent[agent];
                 changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
 
                 if (agent.IsPlayerControlled)
@@ -403,7 +403,7 @@ namespace BattleStamina.Patches
             else
             {
                 CurrentStaminaPerAgent[agent] = newStamina > StaminaProperties.Instance.NoStaminaRemaining ? newStamina : StaminaProperties.Instance.NoStaminaRemaining;
-                newStaminaRatio = newStamina / MissionSpawnAgentPatch.MaxStaminaPerAgent[agent];
+                newStaminaRatio = newStamina / OriginalMaxStaminaPerAgent[agent];
                 changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
 
                 if (agent.IsPlayerControlled)
@@ -433,6 +433,11 @@ namespace BattleStamina.Patches
                         Print("You're feeling fresh!", new Color(0.64f, 0.78f, 0.22f)); // green
                         BelowFullStamina = true;
                     }
+                }
+
+                if (newStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining && !BelowLowStamina)
+                {
+                    CurrentMaxStaminaPerAgent[agent] -= OriginalMaxStaminaPerAgent[agent] * .1; // lose 10% of max stamina whenever stamina falls below Low
                 }
             }
 
@@ -494,30 +499,6 @@ namespace BattleStamina.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BattleAgentLogic), "OnAgentRemoved")]
-    class MissionOnAgentRemovedPatch
-    {
-        public static void Postfix(BattleAgentLogic __instance, 
-      Agent affectedAgent,
-      Agent affectorAgent,
-      AgentState agentState,
-      KillingBlow killingBlow)
-        {
-            if (affectedAgent != MissionSpawnAgentPatch.heroAgent)
-            {
-                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
-                MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
-                MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
-                MissionSpawnAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
-            }
-            else
-            {
-                // need to reset weapons' speeds on agent death
-                MissionOnTickPatch.ChangeWeaponSpeedsHandler(affectedAgent, 1.0, false);
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(ArenaPracticeFightMissionController), "OnAgentRemoved")]
     class ArenaPracticeFightMissionControllerOnAgentRemovedPatch
     {
@@ -532,9 +513,17 @@ namespace BattleStamina.Patches
                 AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent);
                 MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
                 MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
-                MissionSpawnAgentPatch.MaxStaminaPerAgent.Remove(affectedAgent);
+                MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Remove(affectedAgent);
             }
-            else
+        }
+    }
+
+    [HarmonyPatch(typeof(ArenaPracticeFightMissionController), "CheckPracticeEndedForPlayer")]
+    class ArenaPracticeFightMissionControllerCheckPracticeEndedForPlayerPatch
+    {
+        public static void Postfix(ref bool __result)
+        {
+            if (__result)
             {
                 MissionOnTickPatch.Cleanup();
             }
@@ -544,7 +533,6 @@ namespace BattleStamina.Patches
     [HarmonyPatch(typeof(Mission), "SpawnAttachedWeaponOnCorpse")]
     class AgentGetEquipmentPatch
     {
-
         public static bool Prefix(Mission __instance,
       Agent agent,
       int attachedWeaponIndex,
@@ -566,9 +554,10 @@ namespace BattleStamina.Patches
             bool isPassiveUsage,
             ref bool __result)
         {
-            if (StaminaProperties.Instance.StaminaAffectsCrushThrough)
+            if (MissionSpawnAgentPatch.CurrentStaminaPerAgent.Count > 0 && StaminaProperties.Instance.StaminaAffectsCrushThrough)
             {
-                double defenderStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[defenderAgent] / MissionSpawnAgentPatch.MaxStaminaPerAgent[defenderAgent];
+                double attackerStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[attackerAgent] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[attackerAgent];
+                double defenderStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[defenderAgent] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[defenderAgent];
 
                 // if defender stamina low and attack wasn't crushed through, let it through
                 if (defenderStaminaRatio < StaminaProperties.Instance.LowStaminaRemaining)
@@ -577,7 +566,7 @@ namespace BattleStamina.Patches
                 }
 
                 // if defender stamina high and attack crushed through, block it
-                if (defenderStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining)
+                if (defenderStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining || attackerStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining)
                 {
                     __result = false;
                 }

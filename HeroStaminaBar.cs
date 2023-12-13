@@ -74,7 +74,7 @@ namespace BattleStamina
             {
                 int currentStamina = (int)MissionSpawnAgentPatch.CurrentStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
                 HeroStamina = currentStamina > 0 ? currentStamina : 1;
-                HeroStaminaMax = (int)MissionSpawnAgentPatch.MaxStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
+                HeroStaminaMax = (int)MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
             }
         }
     }
