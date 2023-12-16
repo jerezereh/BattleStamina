@@ -3,7 +3,7 @@ using Bannerlord.UIExtenderEx.Prefabs2;
 using Bannerlord.UIExtenderEx.ViewModels;
 using BattleStamina.Patches;
 using TaleWorlds.Library;
-using TaleWorlds.MountAndBlade.ViewModelCollection.Multiplayer;
+using TaleWorlds.MountAndBlade.ViewModelCollection;
 
 namespace BattleStamina
 {

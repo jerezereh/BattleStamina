@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using System.Xml;
-using TaleWorlds.Core;
 using TaleWorlds.Engine.GauntletUI;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
@@ -54,7 +53,7 @@ namespace BattleStamina
             spriteCategory.Load(UIResourceManager.ResourceContext, resourceDepot);
             var texture = TaleWorlds.Engine.Texture.LoadTextureFromPath($"{spriteSheet}_{sheetId}.png",
                 BasePath.Name + "Modules/BattleStamina/Sprites/SpriteSheets/" + spriteSheet);
-            texture.PreloadTexture();
+            texture.PreloadTexture(false);
             var texture2D = new Texture(new EngineTexture(texture));
             UIResourceManager.SpriteData.SpriteCategories[spriteSheet].SpriteSheets[sheetId - 1] = texture2D;
         }

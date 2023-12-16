@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace BattleStamina
 {
-    public class StaminaProperties : GlobalSettings<StaminaProperties>
+    public class StaminaProperties : AttributeGlobalSettings<StaminaProperties>
     {
         public override string DisplayName => "BattleStamina";
         public override string FormatType => "xml";
@@ -17,11 +17,11 @@ namespace BattleStamina
         public int BaseStaminaValue { get; set; } = 600;
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
-        [SettingPropertyFloatingInteger("Stamina Gained per Athletics", 0, 10, HintText = "The amount of stamina gained per rank in Athletics")]
+        [SettingPropertyFloatingInteger("Stamina Gained per Athletics", 0.0f, 10.0f, HintText = "The amount of stamina gained per rank in Athletics")]
         public float StaminaGainedPerAthletics { get; set; } = 3.0f;
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
-        [SettingPropertyFloatingInteger("Stamina Gained per Combat Skill", 0, 10, HintText = "The amount of stamina gained per rank in combat skills (One Handed, Two Handed, Bow, Throwing, etc)")]
+        [SettingPropertyFloatingInteger("Stamina Gained per Combat Skill", 0.0f, 10.0f, HintText = "The amount of stamina gained per rank in combat skills (One Handed, Two Handed, Bow, Throwing, etc)")]
         public float StaminaGainedPerCombatSkill { get; set; } = 1.0f;
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
@@ -37,7 +37,7 @@ namespace BattleStamina
         public int StaminaCostToRangedAttack { get; set; } = 40;
 
         [SettingPropertyGroup("Stamina Costs")]
-        [SettingPropertyFloatingInteger("Stamina Cost of Blocking Damage", 0, 5, HintText = "The amount of stamina depleted per point of damage blocked")]
+        [SettingPropertyFloatingInteger("Stamina Cost of Blocking Damage", 0.0f, 5.0f, HintText = "The amount of stamina depleted per point of damage blocked")]
         public float StaminaCostPerBlockedDamage { get; set; } = 1.5f;
 
         [SettingPropertyGroup("Stamina Costs")]
@@ -46,6 +46,7 @@ namespace BattleStamina
 
         //public readonly double MoveCost { get; set; } = 0.5;
 
+        [SettingPropertyGroup("Stamina Debuffs")]
         [SettingPropertyFloatingInteger("Lowest Speed from Stamina Debuff", 0f, 1.0f, HintText = "The minimum speed (percentage) a character will attack at when they run out of stamina")]
         public float LowestSpeedFromStaminaDebuff { get; set; } = 0.5f;
 
@@ -58,7 +59,7 @@ namespace BattleStamina
         public float StaminaRecoveredPerTickResting { get; set; } = 0.5f;
 
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingPropertyFloatingInteger("Seconds before Stamina Regenerates", 0, 10, HintText = "The estimated amount of seconds before stamina begins to regenerate")]
+        [SettingPropertyFloatingInteger("Seconds before Stamina Regenerates", 0.0f, 10.0f, HintText = "The estimated amount of seconds before stamina begins to regenerate")]
         public float SecondsBeforeStaminaRegenerates { get; set; } = 2.5f;
 
         [SettingPropertyGroup("Stamina Regeneration")]
@@ -82,11 +83,11 @@ namespace BattleStamina
 
         public override IEnumerable<ISettingsPreset> GetBuiltInPresets()
         {
-            var basePresets = base.GetBuiltInPresets();// include the 'Default' preset using above values
+            var basePresets = base.GetBuiltInPresets(); // include the 'Default' preset using above values
             foreach (var preset in basePresets)
                 yield return preset;
 
-            yield return new MemorySettingsPreset("Realistic Battles", "default", "Default", () => new StaminaProperties()
+            yield return new MemorySettingsPreset("Realistic Battles", "test", "Test", () => new StaminaProperties()
             {
                 BaseStaminaValue = 600,
                 StaminaGainedPerAthletics = 3.0f,
