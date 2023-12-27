@@ -1,4 +1,4 @@
-﻿//#undef DEBUG
+﻿#undef DEBUG
 
 using HarmonyLib;
 using SandBox.GameComponents;
@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using TaleWorlds.CampaignSystem.TournamentGames;
 using TaleWorlds.Core;
+using TaleWorlds.Engine.Options;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
 
@@ -23,9 +24,9 @@ namespace BattleStamina.Patches
         {
             if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Continuing && !__instance.Paused)
             {
-                MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Keys.Except(MissionSpawnAgentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
-                           .Where(x => x.IsActive() && x.Character != null)
-                           .ToList().ForEach(o => AgentRecoveryTimers[o]++);
+                __instance.CurrentMission.Agents.Except(MissionSpawnAgentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
+                    .Where(x => x.IsActive() && x.Character != null)
+                    .ToList().ForEach(o => AgentRecoveryTimers[o]++);
 
                 if (!MissionSpawnAgentPatch.AgentsToBeUpdated.IsEmpty())
                 {
@@ -40,11 +41,10 @@ namespace BattleStamina.Patches
 
                 foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
                 {
-                    if (AgentRecoveryTimers[agent] > 120 * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates
-                        && MissionSpawnAgentPatch.GetCurrentStaminaRatio(agent) < MissionSpawnAgentPatch.CurrentMaxStaminaPerAgent[agent]
-                    )
+                    // frame rate dependent, might be bugged
+                    if (AgentRecoveryTimers[agent] > AgentInitializeMissionEquipmentPatch.frameRate * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates)
                     {
-                        AgentRecoveryTimers[agent] = 0;
+                        //AgentRecoveryTimers[agent] = 0;
 
                         if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
                             MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTickMoving, true);
@@ -100,7 +100,7 @@ namespace BattleStamina.Patches
                         (int)Math.Round(newSwingSpeed, MidpointRounding.AwayFromZero),
                         BindingFlags.NonPublic | BindingFlags.Instance, null, null, null);
 #if DEBUG
-                    InformationManager.DisplayMessage(new InformationMessage("Actor: " + agent.Name + "; Weapon: " + weapon.Item.Name + "; New speed: " + property.GetValue(weapon.CurrentUsageItem), new Color(1.00f, 0.38f, 0.01f), "Debug"));
+                    //InformationManager.DisplayMessage(new InformationMessage("Actor: " + agent.Name + "; Weapon: " + weapon.Item.Name + "; New speed: " + property.GetValue(weapon.CurrentUsageItem), new Color(1.00f, 0.38f, 0.01f), "Debug"));
 #endif
                     property = typeof(WeaponComponentData).GetProperty("ThrustSpeed");
                     property.DeclaringType.GetProperty("ThrustSpeed");
@@ -121,7 +121,7 @@ namespace BattleStamina.Patches
                     InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in ChangeWeaponSpeeds!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
 #endif
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
 #if DEBUG
                     InformationManager.DisplayMessage(new InformationMessage("Unexpected exception" + e + " in ChangeWeaponSpeeds!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
@@ -186,6 +186,7 @@ namespace BattleStamina.Patches
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
             MissionSpawnAgentPatch.AgentsToBeUpdated.Clear();
             MissionSpawnAgentPatch.CurrentStaminaPerAgent.Clear();
+            MissionSpawnAgentPatch.CurrentMaxStaminaPerAgent.Clear();
             MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Clear();
             MissionSpawnAgentPatch.heroAgent = null;
         }
@@ -244,34 +245,32 @@ namespace BattleStamina.Patches
       bool isBlocked,
       float damagedHp)
         {
-            if (MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectorAgent) && MissionOnTickPatch.AgentRecoveryTimers.ContainsKey(affectedAgent) && affectorAgent != affectedAgent)
+            if (affectorAgent.Character != null && affectorAgent.IsActive())
             {
                 MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
+
+                if (b.IsMissile)
+                {
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
+                }
+                else
+                {
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
+                }
+            }
+
+            if (affectedAgent.Character != null && affectedAgent.IsActive() && affectedAgent.Health - damagedHp > 0)
+            {
                 MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
 
-                if (affectorAgent.Character != null && affectorAgent.IsActive())
+                if (isBlocked)
                 {
-                    if (b.IsMissile)
-                    {
-                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
-                    }
-                    else
-                    {
-                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
-                    }
+
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaProperties.Instance.StaminaCostPerBlockedDamage);
                 }
-
-                if (affectedAgent.Character != null && affectedAgent.IsActive())
+                else
                 {
-                    if (isBlocked)
-                    {
-
-                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaProperties.Instance.StaminaCostPerBlockedDamage);
-                    }
-                    else
-                    {
-                        MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaProperties.Instance.StaminaCostPerReceivedDamage);
-                    }
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaProperties.Instance.StaminaCostPerReceivedDamage);
                 }
             }
         }
@@ -281,16 +280,16 @@ namespace BattleStamina.Patches
     class MissionSpawnAgentPatch
     {
         public static Queue<Tuple<Agent, double>> AgentsToBeUpdated = new Queue<Tuple<Agent, double>>();
-        public static Dictionary<Agent, double> OriginalMaxStaminaPerAgent = new Dictionary<Agent, double>();
-        public static Dictionary<Agent, double> CurrentMaxStaminaPerAgent = new Dictionary<Agent, double>();
-        public static Dictionary<Agent, double> CurrentStaminaPerAgent = new Dictionary<Agent, double>();
+        public static Dictionary<int, double> OriginalMaxStaminaPerAgent = new Dictionary<int, double>();
+        public static Dictionary<int, double> CurrentMaxStaminaPerAgent = new Dictionary<int, double>();
+        public static Dictionary<int, double> CurrentStaminaPerAgent = new Dictionary<int, double>();
         public static Agent heroAgent;
 
-        public static bool BelowFullStamina = false;
-        public static bool BelowHighStamina = false;
-        public static bool BelowMediumStamina = false;
-        public static bool BelowLowStamina = false;
-        public static bool NoStamina = false;
+        public static bool FullStaminaTier = true;
+        public static bool HighStaminaTier = false;
+        public static bool MediumStaminaTier = false;
+        public static bool LowStaminaTier = false;
+        public static bool NoStaminaTier = false;
 
         public static void Postfix(Mission __instance,
       AgentBuildData agentBuildData,
@@ -309,17 +308,17 @@ namespace BattleStamina.Patches
                     agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Throwing) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
                     agentBuildData.AgentCharacter.Level * StaminaProperties.Instance.StaminaGainedPerLevel;
 
-                OriginalMaxStaminaPerAgent.Add(__result, fullStamina);
-                CurrentMaxStaminaPerAgent.Add(__result, fullStamina);
-                CurrentStaminaPerAgent.Add(__result, fullStamina);
+                OriginalMaxStaminaPerAgent.Add(__result.Index, fullStamina);
+                CurrentMaxStaminaPerAgent.Add(__result.Index, fullStamina);
+                CurrentStaminaPerAgent.Add(__result.Index, fullStamina);
             }
 #if DEBUG
-                InformationManager.DisplayMessage(new InformationMessage("Agent " + __result.Name + " has " + CurrentStaminaPerAgent[__result] + " stamina" , new Color(1.00f, 0.38f, 0.01f), "Debug"));
+                InformationManager.DisplayMessage(new InformationMessage("Agent " + __result.Name + " has " + CurrentStaminaPerAgent[__result.Index] + " stamina" , new Color(1.00f, 0.38f, 0.01f), "Debug"));
 #endif
 
             MissionOnTickPatch.AgentRecoveryTimers.Add(__result, 0);
 
-            if (__result.IsPlayerControlled)
+            if (__result.IsPlayerUnit)
             {
                 heroAgent = __result;
             }
@@ -329,7 +328,7 @@ namespace BattleStamina.Patches
         {
             try
             {
-                return CurrentStaminaPerAgent[agent] / OriginalMaxStaminaPerAgent[agent];
+                return CurrentStaminaPerAgent[agent.Index] / OriginalMaxStaminaPerAgent[agent.Index];
             }
             catch (KeyNotFoundException)
             {
@@ -344,7 +343,7 @@ namespace BattleStamina.Patches
         {
             try
             {
-                double newStamina = recovering ? CurrentStaminaPerAgent[agent] + staminaDelta : CurrentStaminaPerAgent[agent] - staminaDelta;
+                double newStamina = recovering ? CurrentStaminaPerAgent[agent.Index] + staminaDelta : CurrentStaminaPerAgent[agent.Index] - staminaDelta;
                 UpdateStamina(agent, newStamina < 0 ? 0 : newStamina, recovering);
             }
             catch (KeyNotFoundException)
@@ -357,116 +356,153 @@ namespace BattleStamina.Patches
 
         private static void UpdateStamina(Agent agent, double newStamina, bool recovering = false)
         {
-            double oldStaminaRatio = GetCurrentStaminaRatio(agent);
-            double newStaminaRatio;
-            bool changedTier;
+            //double oldStaminaRatio = GetCurrentStaminaRatio(agent);
+            double newStaminaRatio = newStamina / OriginalMaxStaminaPerAgent[agent.Index];
+            bool changedTier = GetTierChanged(newStaminaRatio, recovering);
 
             if (!agent.IsActive())
                 return;
 
+            if (agent.IsPlayerUnit)
+                InformationManager.DisplayMessage(new InformationMessage("Agent " + agent.Name + " has " + CurrentStaminaPerAgent[agent.Index] + " stamina", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+
             if (recovering)
             {
-                CurrentStaminaPerAgent[agent] = newStamina / OriginalMaxStaminaPerAgent[agent] > StaminaProperties.Instance.HighStaminaRemaining ?
-                    (StaminaProperties.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent]) : newStamina;
-                newStaminaRatio = newStamina / OriginalMaxStaminaPerAgent[agent];
-                changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
-
-                if (agent.IsPlayerControlled)
+                // if stamina has fallen below High Level (75% default) and recovery would set it above High Level, set to High Level instead
+                if (CurrentStaminaPerAgent[agent.Index] < StaminaProperties.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent.Index] &&
+                    newStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining)
                 {
-                    if (newStaminaRatio > StaminaProperties.Instance.NoStaminaRemaining && NoStamina)
-                    {
-                        Print("You manage to catch your breath! You're feeling tired!", new Color(1.00f, 0.38f, 0.01f)); // orange
-                        NoStamina = false;
-                    }
-                    else if (newStaminaRatio > StaminaProperties.Instance.LowStaminaRemaining && BelowLowStamina)
-                    {
-                        Print("Your heart calms! You're feeling winded!", new Color(1.0f, 0.83f, 0.0f)); // yellow
-                        BelowLowStamina = false;
-                    }
-                    else if (newStaminaRatio > StaminaProperties.Instance.MediumStaminaRemaining && BelowMediumStamina)
-                    {
-                        Print("You're feeling warmed up!", new Color(0.91f, 0.84f, 0.42f)); // pale yellow
-                        BelowMediumStamina = false;
-                    }
-                    else if (newStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining && BelowHighStamina)
-                    {
-                        Print("You're feeling fresh!", new Color(0.64f, 0.78f, 0.22f)); // green
-                        BelowHighStamina = false;
-                    }
+                    CurrentStaminaPerAgent[agent.Index] = StaminaProperties.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent.Index];
+                }
+                else
+                {
+                    CurrentStaminaPerAgent[agent.Index] = newStamina > OriginalMaxStaminaPerAgent[agent.Index] ? OriginalMaxStaminaPerAgent[agent.Index] : newStamina;
                 }
             }
 
             else
             {
-                CurrentStaminaPerAgent[agent] = newStamina > StaminaProperties.Instance.NoStaminaRemaining ? newStamina : StaminaProperties.Instance.NoStaminaRemaining;
-                newStaminaRatio = newStamina / OriginalMaxStaminaPerAgent[agent];
-                changedTier = GetTierChanged(oldStaminaRatio, newStaminaRatio, recovering);
+                CurrentStaminaPerAgent[agent.Index] = newStamina > StaminaProperties.Instance.NoStaminaRemaining ? newStamina : StaminaProperties.Instance.NoStaminaRemaining;
 
-                if (agent.IsPlayerControlled)
+                if (newStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining && !LowStaminaTier)
                 {
-                    if (newStaminaRatio <= StaminaProperties.Instance.NoStaminaRemaining && !NoStamina)
-                    {
-                        Print("You're completely exhausted! Rest now!", new Color(0.55f, 0, 0)); // red
-                        NoStamina = true;
-                    }
-                    else if (newStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining && !BelowLowStamina)
-                    {
-                        Print("You're feeling tired! Rest soon!", new Color(1.00f, 0.38f, 0.01f)); // orange
-                        BelowLowStamina = true;
-                    }
-                    else if (newStaminaRatio <= StaminaProperties.Instance.MediumStaminaRemaining && !BelowMediumStamina)
-                    {
-                        Print("You're feeling winded! You're attacks are slowing!", new Color(1.0f, 0.83f, 0.0f)); // yellow
-                        BelowMediumStamina = true;
-                    }
-                    else if (newStaminaRatio <= StaminaProperties.Instance.HighStaminaRemaining && !BelowHighStamina)
-                    {
-                        Print("You're feeling warmed up!", new Color(0.91f, 0.84f, 0.42f)); // pale yellow
-                        BelowHighStamina = true;
-                    }
-                    else if (newStaminaRatio <= StaminaProperties.Instance.FullStaminaRemaining && !BelowFullStamina)
-                    {
-                        Print("You're feeling fresh!", new Color(0.64f, 0.78f, 0.22f)); // green
-                        BelowFullStamina = true;
-                    }
-                }
-
-                if (newStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining && !BelowLowStamina)
-                {
-                    CurrentMaxStaminaPerAgent[agent] -= OriginalMaxStaminaPerAgent[agent] * .1; // lose 10% of max stamina whenever stamina falls below Low
+                    CurrentMaxStaminaPerAgent[agent.Index] -= OriginalMaxStaminaPerAgent[agent.Index] * .1; // lose 10% of max stamina whenever stamina falls below Low
                 }
             }
 
             if (changedTier)
-                AgentsToBeUpdated.Enqueue(new Tuple<Agent, double>(agent, newStaminaRatio));
+            {
+                AgentsToBeUpdated.Enqueue(new Tuple<Agent, double>(agent, newStaminaRatio)); // update weapon speeds and move speed when stamina tier changes
+
+                if (agent.IsPlayerUnit)
+                {
+                    PrintTierChangedMessage(recovering);
+                }
+            }
         }
 
-        private static bool GetTierChanged(double oldStaminaRatio, double newStaminaRatio, bool recovering)
+        private static bool GetTierChanged(double newStaminaRatio, bool recovering)
         {
             if (recovering)
             {
-                if (oldStaminaRatio <= StaminaProperties.Instance.NoStaminaRemaining && newStaminaRatio > StaminaProperties.Instance.NoStaminaRemaining)
+                if (NoStaminaTier && newStaminaRatio > StaminaProperties.Instance.NoStaminaRemaining)
+                {
+                    NoStaminaTier = false;
+                    LowStaminaTier = true;
                     return true;
-                if (oldStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining && newStaminaRatio > StaminaProperties.Instance.LowStaminaRemaining)
+                }
+                else if (LowStaminaTier && newStaminaRatio > StaminaProperties.Instance.LowStaminaRemaining)
+                {
+                    LowStaminaTier = false;
+                    MediumStaminaTier = true;
                     return true;
-                if (oldStaminaRatio <= StaminaProperties.Instance.MediumStaminaRemaining && newStaminaRatio > StaminaProperties.Instance.MediumStaminaRemaining)
+                }
+                else if (MediumStaminaTier && newStaminaRatio > StaminaProperties.Instance.MediumStaminaRemaining)
+                {
+                    MediumStaminaTier = false;
+                    HighStaminaTier = true;
                     return true;
-                if (oldStaminaRatio <= StaminaProperties.Instance.HighStaminaRemaining && newStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining)
+                }
+                else if (HighStaminaTier && newStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining)
+                {
+                    HighStaminaTier = false;
+                    FullStaminaTier = true;
                     return true;
+                }
             }
 
             else
             {
-                if (oldStaminaRatio > StaminaProperties.Instance.NoStaminaRemaining && newStaminaRatio <= StaminaProperties.Instance.NoStaminaRemaining)
+                if (LowStaminaTier && newStaminaRatio < StaminaProperties.Instance.LowStaminaRemaining)
+                {
+                    LowStaminaTier = false;
+                    NoStaminaTier = true;
                     return true;
-                if (oldStaminaRatio > StaminaProperties.Instance.LowStaminaRemaining && newStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining)
+                }
+                else if (MediumStaminaTier && newStaminaRatio < StaminaProperties.Instance.MediumStaminaRemaining)
+                {
+                    MediumStaminaTier = false;
+                    LowStaminaTier = true;
                     return true;
-                if (oldStaminaRatio > StaminaProperties.Instance.MediumStaminaRemaining && newStaminaRatio <= StaminaProperties.Instance.MediumStaminaRemaining)
+                }
+                else if (HighStaminaTier && newStaminaRatio < StaminaProperties.Instance.HighStaminaRemaining)
+                {
+                    HighStaminaTier = false;
+                    MediumStaminaTier = true;
                     return true;
-                if (oldStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining && newStaminaRatio <= StaminaProperties.Instance.HighStaminaRemaining)
+                }
+                else if (FullStaminaTier && newStaminaRatio < StaminaProperties.Instance.FullStaminaRemaining)
+                {
+                    FullStaminaTier = false;
+                    HighStaminaTier = true;
                     return true;
+                }
             }
+
             return false;
+        }
+
+        public static void PrintTierChangedMessage(bool recovering)
+        {
+            if (recovering)
+            {
+                if (LowStaminaTier)
+                {
+                    Print("You manage to catch your breath! You're feeling tired!", new Color(1.00f, 0.38f, 0.01f)); // orange
+                }
+                else if (MediumStaminaTier)
+                {
+                    Print("Your heart calms! You're feeling winded!", new Color(1.0f, 0.83f, 0.0f)); // yellow
+                }
+                else if (HighStaminaTier)
+                {
+                    Print("You're feeling warmed up!", new Color(0.91f, 0.84f, 0.42f)); // pale yellow
+                }
+                else if (FullStaminaTier)
+                {
+                    Print("You're feeling fresh!", new Color(0.64f, 0.78f, 0.22f)); // green
+                }
+            }
+
+            else
+            {
+                if (NoStaminaTier)
+                {
+                    Print("You're completely exhausted! Rest now!", new Color(0.55f, 0, 0)); // red
+                }
+                else if (LowStaminaTier)
+                {
+                    Print("You're feeling tired! Rest soon!", new Color(1.00f, 0.38f, 0.01f)); // orange
+                }
+                else if (MediumStaminaTier)
+                {
+                    Print("You're feeling winded! You're attacks are slowing!", new Color(1.0f, 0.83f, 0.0f)); // yellow
+                }
+                else if (HighStaminaTier)
+                {
+                    Print("You're feeling warmed up!", new Color(0.91f, 0.84f, 0.42f)); // pale yellow
+                }
+            }
         }
 
         public static void Print(string message, Color color)
@@ -475,10 +511,25 @@ namespace BattleStamina.Patches
         }
     }
 
+    [HarmonyPatch(typeof(Mission), "OnAgentRemoved")]
+    class MissionOnAgentRemovedPatch
+    {
+        public static void Postfix(Mission __instance, Agent affectedAgent)
+        {
+            if (affectedAgent != MissionSpawnAgentPatch.heroAgent)
+            {
+                MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
+                MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Remove(affectedAgent.Index);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(Agent), "InitializeMissionEquipment")]
     class AgentInitializeMissionEquipmentPatch
     {
         public static Dictionary<int, List<Tuple<int, int>>> AgentOriginalWeaponSpeed = new Dictionary<int, List<Tuple<int, int>>>();
+        public static float frameRate = NativeOptions.GetConfig(NativeOptions.NativeOptionsType.FrameLimiter);
 
         public static void Postfix(Agent __instance)
         {
@@ -508,8 +559,8 @@ namespace BattleStamina.Patches
             {
                 AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent.Index);
                 MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
-                MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent);
-                MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Remove(affectedAgent);
+                MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Remove(affectedAgent.Index);
             }
         }
     }
@@ -552,8 +603,8 @@ namespace BattleStamina.Patches
         {
             if (MissionSpawnAgentPatch.CurrentStaminaPerAgent.Count > 0 && StaminaProperties.Instance.StaminaAffectsCrushThrough)
             {
-                double attackerStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[attackerAgent] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[attackerAgent];
-                double defenderStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[defenderAgent] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[defenderAgent];
+                double attackerStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[attackerAgent.Index] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[attackerAgent.Index];
+                double defenderStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[defenderAgent.Index] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[defenderAgent.Index];
 
                 // if defender stamina low and attack wasn't crushed through, let it through
                 if (defenderStaminaRatio < StaminaProperties.Instance.LowStaminaRemaining)

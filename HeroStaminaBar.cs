@@ -33,12 +33,8 @@ namespace BattleStamina
         private int _heroStaminaMax = 1;
         private readonly MissionAgentStatusVM _vm;
 
-        public MissionAgentStatusViewModelMixin(MissionAgentStatusVM vm) : base(vm)
-        {
-            _vm = ViewModel;
-        }
-
-        [DataSourceProperty] public int HeroStamina
+        [DataSourceProperty]
+        public int HeroStamina
         {
             get
             {
@@ -53,7 +49,8 @@ namespace BattleStamina
             }
         }
 
-        [DataSourceProperty] public int HeroStaminaMax
+        [DataSourceProperty]
+        public int HeroStaminaMax
         {
             get
             {
@@ -68,13 +65,18 @@ namespace BattleStamina
             }
         }
 
+        public MissionAgentStatusViewModelMixin(MissionAgentStatusVM vm) : base(vm)
+        {
+            _vm = ViewModel;
+        }
+
         public override void OnRefresh()
         {
             if (MissionSpawnAgentPatch.heroAgent != null)
             {
-                int currentStamina = (int)MissionSpawnAgentPatch.CurrentStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
-                HeroStamina = currentStamina > 0 ? currentStamina : 1;
-                HeroStaminaMax = (int)MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[MissionSpawnAgentPatch.heroAgent];
+                int currentStamina = (int)MissionSpawnAgentPatch.CurrentStaminaPerAgent[MissionSpawnAgentPatch.heroAgent.Index];
+                HeroStamina = currentStamina > 0 ? currentStamina : 0;
+                HeroStaminaMax = (int)MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[MissionSpawnAgentPatch.heroAgent.Index];
             }
         }
     }

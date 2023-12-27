@@ -52,19 +52,19 @@ namespace BattleStamina
 
         [SettingPropertyGroup("Stamina Regeneration")]
         [SettingPropertyFloatingInteger("Stamina Recovered per Tick while Moving", 0f, 1f, HintText = "The amount of stamina regained per game tick when above 'Regen Maximum Move Speed' (there are about 60-120 ticks per second)")]
-        public float StaminaRecoveredPerTickMoving { get; set; } = 0.2f;
+        public float StaminaRecoveredPerTickMoving { get; set; } = 0.05f;
 
         [SettingPropertyGroup("Stamina Regeneration")]
         [SettingPropertyFloatingInteger("Stamina Recovered per Tick while Resting", 0f, 1f, HintText = "The amount of stamina regained per game tick when below 'Regen Maximum Move Speed' (there are about 60-120 ticks per second)")]
-        public float StaminaRecoveredPerTickResting { get; set; } = 0.5f;
+        public float StaminaRecoveredPerTickResting { get; set; } = 0.2f;
 
         [SettingPropertyGroup("Stamina Regeneration")]
         [SettingPropertyFloatingInteger("Seconds before Stamina Regenerates", 0.0f, 10.0f, HintText = "The estimated amount of seconds before stamina begins to regenerate")]
-        public float SecondsBeforeStaminaRegenerates { get; set; } = 2.5f;
+        public float SecondsBeforeStaminaRegenerates { get; set; } = 6.0f;
 
         [SettingPropertyGroup("Stamina Regeneration")]
         [SettingPropertyFloatingInteger("Regen Maximum Move Speed", 0.1f, 1f, HintText = "The move speed (percentage) above which stamina regeneration will be reduced (10% requires standing still, 100% will allow full regeneration while moving at any speed)")]
-        public float MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.5f;
+        public float MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.3f;
 
         public float FullStaminaRemaining { get; set; } = 1.0f;
 
@@ -87,21 +87,21 @@ namespace BattleStamina
             foreach (var preset in basePresets)
                 yield return preset;
 
-            yield return new MemorySettingsPreset("Realistic Battles", "test", "Test", () => new StaminaProperties()
+            yield return new MemorySettingsPreset("Realistic Battles", "Default", "Default", () => new StaminaProperties()
             {
-                BaseStaminaValue = 600,
+                BaseStaminaValue = 300,
                 StaminaGainedPerAthletics = 3.0f,
                 StaminaGainedPerCombatSkill = 1.0f,
                 StaminaGainedPerLevel = 10,
                 StaminaCostToMeleeAttack = 40,
                 StaminaCostToRangedAttack = 40,
-                StaminaCostPerBlockedDamage = 1.5f,
+                StaminaCostPerBlockedDamage = 3.0f,
                 StaminaCostPerReceivedDamage = 6,
                 LowestSpeedFromStaminaDebuff = 0.5f,
-                StaminaRecoveredPerTickMoving = 0.2f,
-                StaminaRecoveredPerTickResting = 0.5f,
-                SecondsBeforeStaminaRegenerates = 2.5f,
-                MaximumMoveSpeedPercentStaminaRegenerates = 0.5f,
+                StaminaRecoveredPerTickMoving = 0.05f,
+                StaminaRecoveredPerTickResting = 0.2f,
+                SecondsBeforeStaminaRegenerates = 6.0f,
+                MaximumMoveSpeedPercentStaminaRegenerates = 0.3f,
                 FullStaminaRemaining = 1.00f,
                 HighStaminaRemaining = 0.75f,
                 MediumStaminaRemaining = 0.5f,
