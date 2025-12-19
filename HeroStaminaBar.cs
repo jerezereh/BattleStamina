@@ -1,34 +1,41 @@
-﻿using BattleStamina.Patches;
+﻿using Bannerlord.UIExtenderEx.Attributes;
+using Bannerlord.UIExtenderEx.Prefabs2;
+using Bannerlord.UIExtenderEx.ViewModels;
+using BattleStamina.Patches;
 using TaleWorlds.Library;
-using TaleWorlds.MountAndBlade;
 using TaleWorlds.MountAndBlade.ViewModelCollection.Multiplayer;
-using UIExtenderLib.Interface;
 
 namespace BattleStamina
 {
     [PrefabExtension("AgentStatus", "descendant::AgentHealthWidget[@Id='HorseHealthWidget']")]
-    class HeroStaminaWidgetMounted : PrefabExtensionInsertAsSiblingPatch
+    class HeroStaminaWidgetMounted : PrefabExtensionInsertPatch
     {
         public override InsertType Type => InsertType.Prepend;
-        public override string Name => "HeroStaminaBarMounted";
+
+        [PrefabExtensionFileName]
+        public string Name => "HeroStaminaBarMounted";
     }
 
     [PrefabExtension("AgentStatus", "descendant::AgentHealthWidget[@Id='HorseHealthWidget']")]
-    class HeroStaminaWidgetDismounted : PrefabExtensionInsertAsSiblingPatch
+    class HeroStaminaWidgetDismounted : PrefabExtensionInsertPatch
     {
         public override InsertType Type => InsertType.Prepend;
-        public override string Name => "HeroStaminaBarDismounted";
+
+        [PrefabExtensionFileName]
+        public string Name => "HeroStaminaBarDismounted";
     }
 
 
-    [ViewModelMixin]
+    [ViewModelMixin(nameof(MissionAgentStatusVM.Tick))]
     public class MissionAgentStatusViewModelMixin : BaseViewModelMixin<MissionAgentStatusVM>
     {
         private int _heroStamina = 1;
         private int _heroStaminaMax = 1;
+        private readonly MissionAgentStatusVM _vm;
 
         public MissionAgentStatusViewModelMixin(MissionAgentStatusVM vm) : base(vm)
         {
+            _vm = ViewModel;
         }
 
         [DataSourceProperty] public int HeroStamina
@@ -42,8 +49,7 @@ namespace BattleStamina
                 if (value == this._heroStamina)
                     return;
                 this._heroStamina = value;
-                _vm.TryGetTarget(out MissionAgentStatusVM target);
-                target.OnPropertyChanged(nameof(HeroStamina));
+                _vm.OnPropertyChanged(nameof(HeroStamina));
             }
         }
 
@@ -58,8 +64,7 @@ namespace BattleStamina
                 if (value == this._heroStaminaMax)
                     return;
                 this._heroStaminaMax = value;
-                _vm.TryGetTarget(out MissionAgentStatusVM target);
-                target.OnPropertyChanged(nameof(HeroStaminaMax));
+                _vm.OnPropertyChanged(nameof(HeroStaminaMax));
             }
         }
 
