@@ -1,7 +1,5 @@
 ﻿using HarmonyLib;
-using ModLib;
 using System.Xml;
-using TaleWorlds.Core;
 using TaleWorlds.Engine.GauntletUI;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
@@ -26,12 +24,6 @@ namespace BattleStamina
 
             InitializeSprites();
             LoadSprites();
-
-            FileDatabase.Initialise("BattleStamina");
-            StaminaProperties settings = FileDatabase.Get<StaminaProperties>(StaminaProperties.InstanceID);
-            if (settings == null)
-                settings = new StaminaProperties();
-            SettingsDatabase.RegisterSettings(settings);
 
             new Harmony("mod.jrzrh.BattleStamina").PatchAll();
             _uiExtender.Register(typeof(BattleStamina).Assembly);
@@ -61,8 +53,8 @@ namespace BattleStamina
             spriteCategory.Load(UIResourceManager.ResourceContext, resourceDepot);
             var texture = TaleWorlds.Engine.Texture.LoadTextureFromPath($"{spriteSheet}_{sheetId}.png",
                 BasePath.Name + "Modules/BattleStamina/Sprites/SpriteSheets/" + spriteSheet);
-            texture.PreloadTexture();
-            var texture2D = new TaleWorlds.TwoDimension.Texture(new EngineTexture(texture));
+            texture.PreloadTexture(false);
+            var texture2D = new Texture(new EngineTexture(texture));
             UIResourceManager.SpriteData.SpriteCategories[spriteSheet].SpriteSheets[sheetId - 1] = texture2D;
         }
     }
