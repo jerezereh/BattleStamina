@@ -64,6 +64,11 @@
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Reference>
+      <Private>False</Private>
+    </Reference>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <Compile Include="Helper.cs" />
     <Compile Include="BattleStamina.cs" />
@@ -95,19 +100,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.Harmony\bin\Win64_Shipping_Client\0Harmony.dll</HintPath>
+    </Reference>
     <Reference Include="Bannerlord.ButterLib, Version=1.0.21.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Gaming.Desktop.x64_Shipping_Client\Bannerlord.ButterLib.dll</HintPath>
     </Reference>
-    <Reference Include="MCM.UI.Adapter.MCMv5">
-      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCM.UI.Adapter.MCMv5.dll</HintPath>
+    <Reference Include="Bannerlord.UIExtenderEx">
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.UIExtenderEx\bin\Win64_Shipping_Client\Bannerlord.UIExtenderEx.dll</HintPath>
     </Reference>
-    <Reference Include="MCMv5.UI">
-      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv5.UI.dll</HintPath>
+    <Reference Include="MCMv5">
+      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv5.dll</HintPath>
     </Reference>
     <Reference Include="SandBox, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -142,10 +149,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.dll</HintPath>
     </Reference>
-    <Reference Include="TaleWorlds.Diamond.AccessProvider.Epic, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.AccessProvider.Epic.dll</HintPath>
-    </Reference>
     <Reference Include="TaleWorlds.Diamond.AccessProvider.GDK">
       <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.AccessProvider.GDK.dll</HintPath>
     </Reference>
@@ -160,10 +163,6 @@
     <Reference Include="TaleWorlds.Diamond.AccessProvider.Test, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.AccessProvider.Test.dll</HintPath>
-    </Reference>
-    <Reference Include="TaleWorlds.Diamond.ChatSystem.Library, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.ChatSystem.Library.dll</HintPath>
     </Reference>
     <Reference Include="TaleWorlds.DotNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -200,9 +199,6 @@
     <Reference Include="TaleWorlds.GauntletUI.PrefabSystem, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.PrefabSystem.dll</HintPath>
-    </Reference>
-    <Reference Include="TaleWorlds.GauntletUI.TooltipExtensions">
-      <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.TooltipExtensions.dll</HintPath>
     </Reference>
     <Reference Include="TaleWorlds.InputSystem, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -309,22 +305,14 @@
       <HintPath>M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.TwoDimension.Standalone.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Bannerlord.Lib.Harmony">
-      <Version>2.2.2</Version>
-    </PackageReference>
-    <PackageReference Include="Bannerlord.MCM" Version="5.9.1" IncludeAssets="compile" />
-    <PackageReference Include="Bannerlord.UIExtenderEx">
-      <Version>2.8.0</Version>
-    </PackageReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(ProjectDir)SubModule.xml" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\SubModule.xml"
 copy /y "$(TargetPath)" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\bin\Win64_Shipping_Client\BattleStamina.dll"
-robocopy /s /e "$(ProjectDir)Sprites" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\Sprites"
-robocopy /s /e "$(ProjectDir)GUI" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\GUI"
-robocopy /s /e "$(ProjectDir)ModuleData" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\ModuleData"</PostBuildEvent>
+robocopy /s /e "$(ProjectDir)Sprites" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\Sprites" &amp; if errorlevel 8 exit /b 1
+robocopy /s /e "$(ProjectDir)GUI" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\GUI" &amp; if errorlevel 8 exit /b 1
+robocopy /s /e "$(ProjectDir)ModuleData" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\ModuleData" &amp; if errorlevel 8 exit /b 1
+exit /b 0</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>
