@@ -26,7 +26,7 @@ namespace BattleStamina
             InitializeSprites();
             LoadSprites();
 
-            new Harmony("mod.jrzrh.BattleStamina").PatchAll();
+            new Harmony("JezebelTheApocryphal.cloverpit.RelicPaintings").PatchAll();
             _uiExtender.Register(typeof(BattleStamina).Assembly);
         }
 
