@@ -121,7 +121,7 @@ namespace BattleStamina.Patches
                     InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in ChangeWeaponSpeeds!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
 #endif
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
 #if DEBUG
                     InformationManager.DisplayMessage(new InformationMessage("Unexpected exception" + e + " in ChangeWeaponSpeeds!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
@@ -362,9 +362,10 @@ namespace BattleStamina.Patches
 
             if (!agent.IsActive())
                 return;
-
+#if DEBUG
             if (agent.IsPlayerUnit)
                 InformationManager.DisplayMessage(new InformationMessage("Agent " + agent.Name + " has " + CurrentStaminaPerAgent[agent.Index] + " stamina", new Color(1.00f, 0.38f, 0.01f), "Debug"));
+#endif
 
             if (recovering)
             {
