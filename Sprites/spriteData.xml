@@ -3,6 +3,7 @@
 	<SpriteCategories>
 		<SpriteCategory>
 			<Name>BattleStamina</Name>
+			<AlwaysLoad />
 			<SpriteSheetCount>1</SpriteSheetCount>
 			<SpriteSheetSize ID='1' Width='256' Height='256'/>
 		</SpriteCategory>

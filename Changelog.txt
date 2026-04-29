@@ -1,0 +1,47 @@
+v0.0.1: Intial upload. Mod has basic functionality. Stamina is tracked during battles, reducing attack speed (melee weapons only) the lower it gets. All characters in battle tracked/updated separately. Minor stress testing has been done, appears to have little to no impact on framerate.
+
+v0.0.2: Fixed crashes occurring when agents without combat data were loaded (e.g. Notables and animals in town). Fixed stamina logic, no longer goes negative (which reduced attack speed to almost none). Fixed bug causing offhand equipment to become unequipped whenever stamina changed.
+
+v0.1.0: Added ModuleData/Settings.xml to allow users to modify all numbers used in calculations. Fixed stamina calculations (again). Ranged attacks and blocks now correctly consume stamina. A message is printed in the combat log when the player's stamina level changes (to a higher or lower level). Troops now recover stamina after a few seconds of not attacking/getting attacked. Weapon speed now only changed when stamina "level" changes to lessen number of calculations and increase stability.
+
+v0.1.1: Hotfix for crashes that occurred for certain weapons. Weapons picked up during battle should now have their speed adjusted accordingly.
+
+v0.2.0: Implemented movement speed debuff from stamina drain. Fixed inconsistent weapon speed bug when using multiple weapons. Added base value to stamina calculation and reduced gain per skill rank and level. Added new parameters to Settings.xml, users can now set the full and empty stamina amounts, base stamina amount, and percent of maximum movespeed at which stamina will continue to regenerate.
+
+v0.2.1: Hotfix to fix end-of-battle crash. Optimized code by removing agents from trackers on death. Added check for pause during mission.
+
+v0.2.2: Fixed a bug that sometimes occurred at the start of battles.
+
+v0.2.3: More crash fixes.
+
+v0.2.4: Fixed crash due to data structures not clearing correctly.
+
+v0.3.0: Added stamina bar to battle HUD, underneath horse health bar. Fixed movespeed debuff. Fixed crashes on entering/leaving missions. Fixed crash that occasionally occurred on Agent death. Fixed weapon speed not resetting on mission end. Fixed maximum movespeed not being calculated correctly, which stopped stamina regeneration even when standing still. Optimized code by removing actions from OnTick().
+
+v0.3.1: Fixed crashes due to multithreading issues. Upgraded to UIExtenderLib v2.0, using newest Harmony version.
+
+v0.3.2: Fixed crash due to unsafe modification of character weapons. Fixed crash on agent death.
+
+v0.4.0: Added ModLib integration (and dependency), all variables now present in-game. Fixed stamina cost calculations. Fixed sizing issues on stamina bar. Stamina now regenerates while moving, as long as you aren't attacking or being attacked, but regenerates faster while resting.
+
+v0.4.1: Fixed crashes due to unhandled exceptions. Changed stamina cost of blocking to depend on amount of damage blocked.
+
+v0.4.2: Fixed crash due to missing exception handling when picking up weapons. Fixed crash that sometimes occurred when characters died during battle.
+
+v0.4.3: Fixed compatibility issues with beta 1.3.0. Fixed stamina bar not adjusting correctly while dismounted.
+
+v0.4.4: Fixed banner icons disappearing from allied units when their stamina tier changed. Changed color of stamina bar for glance value. Fixed attack animation resetting when stamina tier changed. Fixed bug with weapon speed not resetting sometimes after combat. Temporarily removed movement speed debuff due to bugs.
+
+v0.4.5: Brought BattleStamina up-to-date with current Bannerlord versions. Changed dependencies to more current mods, including Mod Configuration Menu, UIExtenderEx, and an updated version of Harmony. Fixed some performance issues. Tweaked default stamina parameters to make battles feel more visceral.
+
+v0.4.6: Fixed bugs with arena practice combat. Arena practice should now work properly, including change of stamina for all characters, modifying picked up weapons, and restarting practice after getting knocked out.
+
+v0.4.7: Stamina now affects crush through. If a character has higher than High stamina (default 75%), they are immune to crush through, and if they have lower than Low stamina (default 25%) all blocks will be crushed through. Added setting in MCM to disable this effect.
+
+v0.4.8: Fixed bug with weapon speed not resetting properly. Weapons should now properly go back to original speed at the end of a battle.
+
+v0.5.0: Fixed v1.3.x incompatibility issues due to sprite loading changing. Added MCM as a hard dependency. Mod now creates XML file to save mod settings externally.
+
+v0.5.1: Optimized code to better utilize new and updated game functions, improving performance with very large battles.
+
+v0.6.0: Overhauled stamina effects, no longer modifies equipped weapons and forces re-equips. Stamina now modifies melee swing speed, thrust speed, ranged ready/reload speed, movement multipliers, ranged weapon inaccuracy, AI ranged error chance, and AI attack/parry/block/shoot decision rate. Stamina tiers and default values also changed: all penalties are now reduced, except the lowest tier (Low->No Stamina remaining) doubling the penalty.
