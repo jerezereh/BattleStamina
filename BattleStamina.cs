@@ -22,6 +22,7 @@ namespace BattleStamina
             reader.ReadToDescendant("Version");
             version = reader.GetAttribute("value");
 
+            StaminaSettings.Load();
             InitializeSprites();
             LoadSprites();
 
@@ -39,7 +40,24 @@ namespace BattleStamina
         {
             resourceDepot.AddLocation("../../Modules/BattleStamina/", "Sprites/");
             resourceDepot.CollectResources();
-            UIResourceManager.SpriteData.Load(resourceDepot);
+
+            var battleStaminaSpriteData = new SpriteData("spriteData");
+            battleStaminaSpriteData.Load(resourceDepot);
+
+            foreach (var spriteCategory in battleStaminaSpriteData.SpriteCategories)
+            {
+                UIResourceManager.SpriteData.SpriteCategories[spriteCategory.Key] = spriteCategory.Value;
+            }
+
+            foreach (var spritePart in battleStaminaSpriteData.SpriteParts)
+            {
+                UIResourceManager.SpriteData.SpriteParts[spritePart.Key] = spritePart.Value;
+            }
+
+            foreach (var sprite in battleStaminaSpriteData.Sprites)
+            {
+                UIResourceManager.SpriteData.Sprites[sprite.Key] = sprite.Value;
+            }
         }
 
         private void LoadSprites()

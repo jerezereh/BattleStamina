@@ -1,43 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <Module>
-  <Name value="BattleStamina"/>
-  <Id value="BattleStamina"/>
-  <Version value="v0.4.8"/>
-  <SingleplayerModule value="true"/>
-  <MultiplayerModule value="false"/>
-  <DependedModules>
-    <DependedModule Id="Native"/>
-    <DependedModule Id="SandBoxCore"/>
-    <DependedModule Id="Sandbox"/>
-    <DependedModule Id="CustomBattle"/>
-    <DependedModule Id="StoryMode" />
-    <DependedModule Id="Bannerlord.Harmony" />
-    <DependedModule Id="Bannerlord.ButterLib" />
-    <DependedModule Id="Bannerlord.UIExtenderEx" />
-    <DependedModule Id="Bannerlord.MBOptionScreen" />
-  </DependedModules>
-  <SubModules>
-    <SubModule>
-      <Name value="BattleStamina"/>
-      <DLLName value="BattleStamina.dll"/>
-      <SubModuleClassType value="BattleStamina.BattleStamina"/>
-      <Tags>
-        <Tag key="DedicatedServerType" value="none" />
-        <Tag key="IsNoRenderModeElement" value="false" />
-      </Tags>
-    </SubModule>
-	<SubModule>
-      <Name value="MCMv5" />
-	  <DLLName value="MCMv5.dll" />
-	  <SubModuleClassType value="MCM.MCMSubModule" />
-	  <Tags />
-	</SubModule>
-	<SubModule>
-	  <Name value="MCMv5 Basic Implementation" />
-	  <DLLName value="MCMv5.dll" />
-	  <SubModuleClassType value="MCM.Internal.MCMImplementationSubModule" />
-	  <Tags />
-	</SubModule>
-  </SubModules>
-  <Xmls>
-  </Xmls>
+    <Name value="BattleStamina"/>
+    <Id value="BattleStamina"/>
+    <Version value="v0.5.0"/>
+    <ModuleType value="Community"/>
+    <Official value="false" />
+    <DefaultModule value="false" />
+    <SingleplayerModule value="true"/>
+	<MultiplayerModule value="false"/>
+    <DependedModules>
+        <DependedModule Id="Bannerlord.Harmony" />
+        <DependedModule Id="Bannerlord.ButterLib" />
+        <DependedModule Id="Bannerlord.UIExtenderEx" />
+        <DependedModule Id="Bannerlord.MBOptionScreen"/>
+        <DependedModule Id="Native"/>
+        <DependedModule Id="SandBoxCore"/>
+        <DependedModule Id="Sandbox"/>
+        <DependedModule Id="CustomBattle"/>
+        <DependedModule Id="StoryMode" />
+    </DependedModules>
+    <SubModules>
+        <SubModule>
+            <Name value="BattleStamina"/>
+            <DLLName value="BattleStamina.dll"/>
+            <SubModuleClassType value="BattleStamina.BattleStamina"/>
+            <Tags>
+                <Tag key="DedicatedServerType" value="none" />
+                <Tag key="IsNoRenderModeElement" value="false" />
+            </Tags>
+        </SubModule>
+    </SubModules>
 </Module>

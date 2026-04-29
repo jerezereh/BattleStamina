@@ -1,4 +1,4 @@
-﻿using MCM.Abstractions;
+using MCM.Abstractions;
 using MCM.Abstractions.Attributes;
 using MCM.Abstractions.Attributes.v2;
 using MCM.Abstractions.Base.Global;
@@ -14,102 +14,121 @@ namespace BattleStamina
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
         [SettingPropertyInteger("Base Stamina Value", 0, 1000, HintText = "The base amount of stamina each character gets")]
-        public int BaseStaminaValue { get; set; } = 600;
+        public int BaseStaminaValue
+        {
+            get => StaminaSettings.Instance.BaseStaminaValue;
+            set { StaminaSettings.Instance.BaseStaminaValue = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
         [SettingPropertyFloatingInteger("Stamina Gained per Athletics", 0.0f, 10.0f, HintText = "The amount of stamina gained per rank in Athletics")]
-        public float StaminaGainedPerAthletics { get; set; } = 3.0f;
+        public float StaminaGainedPerAthletics
+        {
+            get => StaminaSettings.Instance.StaminaGainedPerAthletics;
+            set { StaminaSettings.Instance.StaminaGainedPerAthletics = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
         [SettingPropertyFloatingInteger("Stamina Gained per Combat Skill", 0.0f, 10.0f, HintText = "The amount of stamina gained per rank in combat skills (One Handed, Two Handed, Bow, Throwing, etc)")]
-        public float StaminaGainedPerCombatSkill { get; set; } = 1.0f;
+        public float StaminaGainedPerCombatSkill
+        {
+            get => StaminaSettings.Instance.StaminaGainedPerCombatSkill;
+            set { StaminaSettings.Instance.StaminaGainedPerCombatSkill = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Calculation Variables")]
         [SettingPropertyInteger("Stamina Gained per Level", 0, 50, HintText = "The amount of stamina gained per level")]
-        public int StaminaGainedPerLevel { get; set; } = 10;
+        public int StaminaGainedPerLevel
+        {
+            get => StaminaSettings.Instance.StaminaGainedPerLevel;
+            set { StaminaSettings.Instance.StaminaGainedPerLevel = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Costs")]
         [SettingPropertyInteger("Stamina Cost of Melee Attacks", 0, 100, HintText = "The amount of stamina depleted per melee attack")]
-        public int StaminaCostToMeleeAttack { get; set; } = 40;
+        public int StaminaCostToMeleeAttack
+        {
+            get => StaminaSettings.Instance.StaminaCostToMeleeAttack;
+            set { StaminaSettings.Instance.StaminaCostToMeleeAttack = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Costs")]
         [SettingPropertyInteger("Stamina Cost of Ranged Attacks", 0, 100, HintText = "The amount of stamina depleted per ranged attack")]
-        public int StaminaCostToRangedAttack { get; set; } = 40;
+        public int StaminaCostToRangedAttack
+        {
+            get => StaminaSettings.Instance.StaminaCostToRangedAttack;
+            set { StaminaSettings.Instance.StaminaCostToRangedAttack = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Costs")]
         [SettingPropertyFloatingInteger("Stamina Cost of Blocking Damage", 0.0f, 5.0f, HintText = "The amount of stamina depleted per point of damage blocked")]
-        public float StaminaCostPerBlockedDamage { get; set; } = 1.5f;
+        public float StaminaCostPerBlockedDamage
+        {
+            get => StaminaSettings.Instance.StaminaCostPerBlockedDamage;
+            set { StaminaSettings.Instance.StaminaCostPerBlockedDamage = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Costs")]
         [SettingPropertyInteger("Stamina Cost of Receiving Damage", 0, 10, HintText = "The amount of stamina depleted per point of damage received")]
-        public int StaminaCostPerReceivedDamage { get; set; } = 6;
-
-        //public readonly double MoveCost { get; set; } = 0.5;
+        public int StaminaCostPerReceivedDamage
+        {
+            get => StaminaSettings.Instance.StaminaCostPerReceivedDamage;
+            set { StaminaSettings.Instance.StaminaCostPerReceivedDamage = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Debuffs")]
         [SettingPropertyFloatingInteger("Lowest Speed from Stamina Debuff", 0f, 1.0f, HintText = "The minimum speed (percentage) a character will attack at when they run out of stamina")]
-        public float LowestSpeedFromStaminaDebuff { get; set; } = 0.5f;
+        public float LowestSpeedFromStaminaDebuff
+        {
+            get => StaminaSettings.Instance.LowestSpeedFromStaminaDebuff;
+            set { StaminaSettings.Instance.LowestSpeedFromStaminaDebuff = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingPropertyFloatingInteger("Stamina Recovered per Tick while Moving", 0f, 1f, HintText = "The amount of stamina regained per game tick when above 'Regen Maximum Move Speed' (there are about 60-120 ticks per second)")]
-        public float StaminaRecoveredPerTickMoving { get; set; } = 0.05f;
+        [SettingPropertyFloatingInteger("Stamina Recovered per Tick while Moving", 0f, 1f, HintText = "The amount of stamina regained per game tick when above 'Regen Maximum Move Speed'")]
+        public float StaminaRecoveredPerTickMoving
+        {
+            get => StaminaSettings.Instance.StaminaRecoveredPerTickMoving;
+            set { StaminaSettings.Instance.StaminaRecoveredPerTickMoving = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingPropertyFloatingInteger("Stamina Recovered per Tick while Resting", 0f, 1f, HintText = "The amount of stamina regained per game tick when below 'Regen Maximum Move Speed' (there are about 60-120 ticks per second)")]
-        public float StaminaRecoveredPerTickResting { get; set; } = 0.2f;
+        [SettingPropertyFloatingInteger("Stamina Recovered per Tick while Resting", 0f, 1f, HintText = "The amount of stamina regained per game tick when below 'Regen Maximum Move Speed'")]
+        public float StaminaRecoveredPerTickResting
+        {
+            get => StaminaSettings.Instance.StaminaRecoveredPerTickResting;
+            set { StaminaSettings.Instance.StaminaRecoveredPerTickResting = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Regeneration")]
         [SettingPropertyFloatingInteger("Seconds before Stamina Regenerates", 0.0f, 10.0f, HintText = "The estimated amount of seconds before stamina begins to regenerate")]
-        public float SecondsBeforeStaminaRegenerates { get; set; } = 6.0f;
+        public float SecondsBeforeStaminaRegenerates
+        {
+            get => StaminaSettings.Instance.SecondsBeforeStaminaRegenerates;
+            set { StaminaSettings.Instance.SecondsBeforeStaminaRegenerates = value; StaminaSettings.Save(); }
+        }
 
         [SettingPropertyGroup("Stamina Regeneration")]
-        [SettingPropertyFloatingInteger("Regen Maximum Move Speed", 0.1f, 1f, HintText = "The move speed (percentage) above which stamina regeneration will be reduced (10% requires standing still, 100% will allow full regeneration while moving at any speed)")]
-        public float MaximumMoveSpeedPercentStaminaRegenerates { get; set; } = 0.3f;
+        [SettingPropertyFloatingInteger("Regen Maximum Move Speed", 0.1f, 1f, HintText = "The move speed percentage above which stamina regeneration will be reduced")]
+        public float MaximumMoveSpeedPercentStaminaRegenerates
+        {
+            get => StaminaSettings.Instance.MaximumMoveSpeedPercentStaminaRegenerates;
+            set { StaminaSettings.Instance.MaximumMoveSpeedPercentStaminaRegenerates = value; StaminaSettings.Save(); }
+        }
 
-        public float FullStaminaRemaining { get; set; } = 1.0f;
-
-        public float HighStaminaRemaining { get; set; } = 0.75f;
-
-        public float MediumStaminaRemaining { get; set; } = 0.5f;
-
-        public float LowStaminaRemaining { get; set; } = 0.25f;
-
-        public float NoStaminaRemaining { get; set; } = 0.01f;
-
-        public bool NoStaminaRemainingStopsAttacks { get; set; } = false;
-
-        [SettingPropertyBool("Stamina Affects Crush Through", HintText = "Toggle if stamina affects crush through. If on, characters with less than Low stamina will always have their blocks crushed through while characters with High stamina cannot be crushed though.")]
-        public bool StaminaAffectsCrushThrough { get; set; } = true;
+        [SettingPropertyBool("Stamina Affects Crush Through", HintText = "Toggle if stamina affects crush through.")]
+        public bool StaminaAffectsCrushThrough
+        {
+            get => StaminaSettings.Instance.StaminaAffectsCrushThrough;
+            set { StaminaSettings.Instance.StaminaAffectsCrushThrough = value; StaminaSettings.Save(); }
+        }
 
         public override IEnumerable<ISettingsPreset> GetBuiltInPresets()
         {
-            var basePresets = base.GetBuiltInPresets(); // include the 'Default' preset using above values
-            foreach (var preset in basePresets)
-                yield return preset;
-
-            yield return new MemorySettingsPreset("Realistic Battles", "Default", "Default", () => new StaminaProperties()
+            foreach (var preset in base.GetBuiltInPresets())
             {
-                BaseStaminaValue = 300,
-                StaminaGainedPerAthletics = 3.0f,
-                StaminaGainedPerCombatSkill = 1.0f,
-                StaminaGainedPerLevel = 10,
-                StaminaCostToMeleeAttack = 40,
-                StaminaCostToRangedAttack = 40,
-                StaminaCostPerBlockedDamage = 3.0f,
-                StaminaCostPerReceivedDamage = 6,
-                LowestSpeedFromStaminaDebuff = 0.5f,
-                StaminaRecoveredPerTickMoving = 0.05f,
-                StaminaRecoveredPerTickResting = 0.2f,
-                SecondsBeforeStaminaRegenerates = 6.0f,
-                MaximumMoveSpeedPercentStaminaRegenerates = 0.3f,
-                FullStaminaRemaining = 1.00f,
-                HighStaminaRemaining = 0.75f,
-                MediumStaminaRemaining = 0.5f,
-                LowStaminaRemaining = 0.25f,
-                NoStaminaRemaining = 0.01f,
-                NoStaminaRemainingStopsAttacks = false,
-                StaminaAffectsCrushThrough = true,
-            });
+                yield return preset;
+            }
         }
     }
 }

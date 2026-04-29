@@ -1,4 +1,4 @@
-﻿#undef DEBUG
+#undef DEBUG
 
 using HarmonyLib;
 using SandBox.GameComponents;
@@ -42,14 +42,14 @@ namespace BattleStamina.Patches
                 foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
                 {
                     // frame rate dependent, might be bugged
-                    if (AgentRecoveryTimers[agent] > AgentInitializeMissionEquipmentPatch.frameRate * StaminaProperties.Instance.SecondsBeforeStaminaRegenerates)
+                    if (AgentRecoveryTimers[agent] > AgentInitializeMissionEquipmentPatch.frameRate * StaminaSettings.Instance.SecondsBeforeStaminaRegenerates)
                     {
                         //AgentRecoveryTimers[agent] = 0;
 
-                        if (agent.GetCurrentVelocity().Length > agent.MaximumForwardUnlimitedSpeed * StaminaProperties.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
-                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTickMoving, true);
+                        if (agent.GetCurrentVelocity().Length > agent.GetMaximumForwardUnlimitedSpeed() * StaminaSettings.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
+                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaSettings.Instance.StaminaRecoveredPerTickMoving, true);
                         else
-                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaProperties.Instance.StaminaRecoveredPerTickResting, true);
+                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaSettings.Instance.StaminaRecoveredPerTickResting, true);
                     }
                 }
             }
@@ -63,9 +63,9 @@ namespace BattleStamina.Patches
             EquipmentIndex mainIndex = EquipmentIndex.None;
             EquipmentIndex offIndex = EquipmentIndex.None;
             if (equipped.CurrentUsageItem != null)
-                mainIndex = agent.GetWieldedItemIndex(Agent.HandIndex.MainHand);
+                mainIndex = agent.GetPrimaryWieldedItemIndex();
             if (offhandEquipped.CurrentUsageItem != null)
-                offIndex = agent.GetWieldedItemIndex(Agent.HandIndex.OffHand);
+                offIndex = agent.GetOffhandWieldedItemIndex();
 
             for (int i = 0; i < 4; i++)
             {
@@ -74,7 +74,7 @@ namespace BattleStamina.Patches
                 if (currentWeapon.CurrentUsageItem != null && !currentWeapon.CurrentUsageItem.IsRangedWeapon) // && !currentWeapon.CurrentUsageItem.IsRangedWeapon -- checking to ignore ranged weapons?
                 {
                     // normalize speed multiplier between 100% and minimum set in properties and ensure speed multiplier above minimum
-                    speedMultiplier = (speedMultiplier * (1 - StaminaProperties.Instance.LowestSpeedFromStaminaDebuff)) + StaminaProperties.Instance.LowestSpeedFromStaminaDebuff;
+                    speedMultiplier = (speedMultiplier * (1 - StaminaSettings.Instance.LowestSpeedFromStaminaDebuff)) + StaminaSettings.Instance.LowestSpeedFromStaminaDebuff;
                     double newSwingSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent.Index][i].Item1 * speedMultiplier;
                     double newThrustSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent.Index][i].Item2 * speedMultiplier;
 
@@ -251,11 +251,11 @@ namespace BattleStamina.Patches
 
                 if (b.IsMissile)
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToRangedAttack);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaSettings.Instance.StaminaCostToRangedAttack);
                 }
                 else
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaProperties.Instance.StaminaCostToMeleeAttack);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaSettings.Instance.StaminaCostToMeleeAttack);
                 }
             }
 
@@ -266,11 +266,11 @@ namespace BattleStamina.Patches
                 if (isBlocked)
                 {
 
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaProperties.Instance.StaminaCostPerBlockedDamage);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaSettings.Instance.StaminaCostPerBlockedDamage);
                 }
                 else
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaProperties.Instance.StaminaCostPerReceivedDamage);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaSettings.Instance.StaminaCostPerReceivedDamage);
                 }
             }
         }
@@ -298,15 +298,15 @@ namespace BattleStamina.Patches
         {
             if (agentBuildData != null)
             {
-                double fullStamina = StaminaProperties.Instance.BaseStaminaValue +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Athletics) * StaminaProperties.Instance.StaminaGainedPerAthletics +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.OneHanded) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.TwoHanded) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Polearm) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Bow) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Crossbow) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
-                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Throwing) * StaminaProperties.Instance.StaminaGainedPerCombatSkill +
-                    agentBuildData.AgentCharacter.Level * StaminaProperties.Instance.StaminaGainedPerLevel;
+                double fullStamina = StaminaSettings.Instance.BaseStaminaValue +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Athletics) * StaminaSettings.Instance.StaminaGainedPerAthletics +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.OneHanded) * StaminaSettings.Instance.StaminaGainedPerCombatSkill +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.TwoHanded) * StaminaSettings.Instance.StaminaGainedPerCombatSkill +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Polearm) * StaminaSettings.Instance.StaminaGainedPerCombatSkill +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Bow) * StaminaSettings.Instance.StaminaGainedPerCombatSkill +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Crossbow) * StaminaSettings.Instance.StaminaGainedPerCombatSkill +
+                    agentBuildData.AgentCharacter.GetSkillValue(DefaultSkills.Throwing) * StaminaSettings.Instance.StaminaGainedPerCombatSkill +
+                    agentBuildData.AgentCharacter.Level * StaminaSettings.Instance.StaminaGainedPerLevel;
 
                 OriginalMaxStaminaPerAgent.Add(__result.Index, fullStamina);
                 CurrentMaxStaminaPerAgent.Add(__result.Index, fullStamina);
@@ -369,10 +369,10 @@ namespace BattleStamina.Patches
             if (recovering)
             {
                 // if stamina has fallen below High Level (75% default) and recovery would set it above High Level, set to High Level instead
-                if (CurrentStaminaPerAgent[agent.Index] < StaminaProperties.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent.Index] &&
-                    newStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining)
+                if (CurrentStaminaPerAgent[agent.Index] < StaminaSettings.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent.Index] &&
+                    newStaminaRatio > StaminaSettings.Instance.HighStaminaRemaining)
                 {
-                    CurrentStaminaPerAgent[agent.Index] = StaminaProperties.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent.Index];
+                    CurrentStaminaPerAgent[agent.Index] = StaminaSettings.Instance.HighStaminaRemaining * OriginalMaxStaminaPerAgent[agent.Index];
                 }
                 else
                 {
@@ -382,9 +382,9 @@ namespace BattleStamina.Patches
 
             else
             {
-                CurrentStaminaPerAgent[agent.Index] = newStamina > StaminaProperties.Instance.NoStaminaRemaining ? newStamina : StaminaProperties.Instance.NoStaminaRemaining;
+                CurrentStaminaPerAgent[agent.Index] = newStamina > StaminaSettings.Instance.NoStaminaRemaining ? newStamina : StaminaSettings.Instance.NoStaminaRemaining;
 
-                if (newStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining && !LowStaminaTier)
+                if (newStaminaRatio <= StaminaSettings.Instance.LowStaminaRemaining && !LowStaminaTier)
                 {
                     CurrentMaxStaminaPerAgent[agent.Index] -= OriginalMaxStaminaPerAgent[agent.Index] * .1; // lose 10% of max stamina whenever stamina falls below Low
                 }
@@ -405,25 +405,25 @@ namespace BattleStamina.Patches
         {
             if (recovering)
             {
-                if (NoStaminaTier && newStaminaRatio > StaminaProperties.Instance.NoStaminaRemaining)
+                if (NoStaminaTier && newStaminaRatio > StaminaSettings.Instance.NoStaminaRemaining)
                 {
                     NoStaminaTier = false;
                     LowStaminaTier = true;
                     return true;
                 }
-                else if (LowStaminaTier && newStaminaRatio > StaminaProperties.Instance.LowStaminaRemaining)
+                else if (LowStaminaTier && newStaminaRatio > StaminaSettings.Instance.LowStaminaRemaining)
                 {
                     LowStaminaTier = false;
                     MediumStaminaTier = true;
                     return true;
                 }
-                else if (MediumStaminaTier && newStaminaRatio > StaminaProperties.Instance.MediumStaminaRemaining)
+                else if (MediumStaminaTier && newStaminaRatio > StaminaSettings.Instance.MediumStaminaRemaining)
                 {
                     MediumStaminaTier = false;
                     HighStaminaTier = true;
                     return true;
                 }
-                else if (HighStaminaTier && newStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining)
+                else if (HighStaminaTier && newStaminaRatio > StaminaSettings.Instance.HighStaminaRemaining)
                 {
                     HighStaminaTier = false;
                     FullStaminaTier = true;
@@ -433,25 +433,25 @@ namespace BattleStamina.Patches
 
             else
             {
-                if (LowStaminaTier && newStaminaRatio < StaminaProperties.Instance.LowStaminaRemaining)
+                if (LowStaminaTier && newStaminaRatio < StaminaSettings.Instance.LowStaminaRemaining)
                 {
                     LowStaminaTier = false;
                     NoStaminaTier = true;
                     return true;
                 }
-                else if (MediumStaminaTier && newStaminaRatio < StaminaProperties.Instance.MediumStaminaRemaining)
+                else if (MediumStaminaTier && newStaminaRatio < StaminaSettings.Instance.MediumStaminaRemaining)
                 {
                     MediumStaminaTier = false;
                     LowStaminaTier = true;
                     return true;
                 }
-                else if (HighStaminaTier && newStaminaRatio < StaminaProperties.Instance.HighStaminaRemaining)
+                else if (HighStaminaTier && newStaminaRatio < StaminaSettings.Instance.HighStaminaRemaining)
                 {
                     HighStaminaTier = false;
                     MediumStaminaTier = true;
                     return true;
                 }
-                else if (FullStaminaTier && newStaminaRatio < StaminaProperties.Instance.FullStaminaRemaining)
+                else if (FullStaminaTier && newStaminaRatio < StaminaSettings.Instance.FullStaminaRemaining)
                 {
                     FullStaminaTier = false;
                     HighStaminaTier = true;
@@ -601,19 +601,19 @@ namespace BattleStamina.Patches
             bool isPassiveUsage,
             ref bool __result)
         {
-            if (MissionSpawnAgentPatch.CurrentStaminaPerAgent.Count > 0 && StaminaProperties.Instance.StaminaAffectsCrushThrough)
+            if (MissionSpawnAgentPatch.CurrentStaminaPerAgent.Count > 0 && StaminaSettings.Instance.StaminaAffectsCrushThrough)
             {
                 double attackerStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[attackerAgent.Index] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[attackerAgent.Index];
                 double defenderStaminaRatio = MissionSpawnAgentPatch.CurrentStaminaPerAgent[defenderAgent.Index] / MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent[defenderAgent.Index];
 
                 // if defender stamina low and attack wasn't crushed through, let it through
-                if (defenderStaminaRatio < StaminaProperties.Instance.LowStaminaRemaining)
+                if (defenderStaminaRatio < StaminaSettings.Instance.LowStaminaRemaining)
                 {
                     __result = true;
                 }
 
                 // if defender stamina high and attack crushed through, block it
-                if (defenderStaminaRatio > StaminaProperties.Instance.HighStaminaRemaining || attackerStaminaRatio <= StaminaProperties.Instance.LowStaminaRemaining)
+                if (defenderStaminaRatio > StaminaSettings.Instance.HighStaminaRemaining || attackerStaminaRatio <= StaminaSettings.Instance.LowStaminaRemaining)
                 {
                     __result = false;
                 }

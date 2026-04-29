@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StaminaSettings>
+  <BaseStaminaValue>600</BaseStaminaValue>
+  <StaminaGainedPerAthletics>3</StaminaGainedPerAthletics>
+  <StaminaGainedPerCombatSkill>1</StaminaGainedPerCombatSkill>
+  <StaminaGainedPerLevel>10</StaminaGainedPerLevel>
+  <StaminaCostToMeleeAttack>40</StaminaCostToMeleeAttack>
+  <StaminaCostToRangedAttack>40</StaminaCostToRangedAttack>
+  <StaminaCostPerBlockedDamage>1.5</StaminaCostPerBlockedDamage>
+  <StaminaCostPerReceivedDamage>6</StaminaCostPerReceivedDamage>
+  <LowestSpeedFromStaminaDebuff>0.5</LowestSpeedFromStaminaDebuff>
+  <StaminaRecoveredPerTickMoving>0.05</StaminaRecoveredPerTickMoving>
+  <StaminaRecoveredPerTickResting>0.2</StaminaRecoveredPerTickResting>
+  <SecondsBeforeStaminaRegenerates>6</SecondsBeforeStaminaRegenerates>
+  <MaximumMoveSpeedPercentStaminaRegenerates>0.3</MaximumMoveSpeedPercentStaminaRegenerates>
+  <FullStaminaRemaining>1</FullStaminaRemaining>
+  <HighStaminaRemaining>0.75</HighStaminaRemaining>
+  <MediumStaminaRemaining>0.5</MediumStaminaRemaining>
+  <LowStaminaRemaining>0.25</LowStaminaRemaining>
+  <NoStaminaRemaining>0.01</NoStaminaRemaining>
+  <NoStaminaRemainingStopsAttacks>false</NoStaminaRemainingStopsAttacks>
+  <StaminaAffectsCrushThrough>true</StaminaAffectsCrushThrough>
+</StaminaSettings>
