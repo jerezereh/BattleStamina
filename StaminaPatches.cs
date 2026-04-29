@@ -1,11 +1,10 @@
-#undef DEBUG
+#define DEBUG
 
 using HarmonyLib;
 using SandBox.GameComponents;
 using SandBox.Missions.MissionLogics.Arena;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using TaleWorlds.CampaignSystem.TournamentGames;
 using TaleWorlds.Core;
@@ -19,37 +18,52 @@ namespace BattleStamina.Patches
     class MissionOnTickPatch
     {
         public static Dictionary<Agent, int> AgentRecoveryTimers = new Dictionary<Agent, int>();
+        private static readonly PropertyInfo SwingSpeedProperty = typeof(WeaponComponentData).GetProperty("SwingSpeed");
+        private static readonly PropertyInfo ThrustSpeedProperty = typeof(WeaponComponentData).GetProperty("ThrustSpeed");
+        public static float FrameRate = NativeOptions.GetConfig(NativeOptions.NativeOptionsType.FrameLimiter);
 
         public static void Postfix(MissionState __instance)
         {
             if (__instance.CurrentMission != null && __instance.CurrentMission.CurrentState == Mission.State.Continuing && !__instance.Paused)
             {
-                __instance.CurrentMission.Agents.Except(MissionSpawnAgentPatch.AgentsToBeUpdated.Select(t => t.Item1).ToList())
-                    .Where(x => x.IsActive() && x.Character != null)
-                    .ToList().ForEach(o => AgentRecoveryTimers[o]++);
+                foreach (Agent agent in new List<Agent>(AgentRecoveryTimers.Keys))
+                {
+                    if (agent == null || !agent.IsActive() || agent.Character == null)
+                        continue;
+
+                    if (!MissionSpawnAgentPatch.IsAgentQueuedForUpdate(agent))
+                    {
+                        AgentRecoveryTimers[agent]++;
+                    }
+                }
 
                 if (!MissionSpawnAgentPatch.AgentsToBeUpdated.IsEmpty())
                 {
                     Tuple<Agent, double> tuple = MissionSpawnAgentPatch.AgentsToBeUpdated.Dequeue();
+                    double staminaRatio = MissionSpawnAgentPatch.GetQueuedAgentUpdateRatio(tuple.Item1, tuple.Item2);
+                    MissionSpawnAgentPatch.MarkAgentUpdateDequeued(tuple.Item1);
 
                     if (tuple.Item1.IsActive())
                     {
-                        ChangeWeaponSpeedsHandler(tuple.Item1, tuple.Item2);
+                        ChangeWeaponSpeedsHandler(tuple.Item1, staminaRatio);
                         //ChangeMoveSpeed(tuple.Item1, tuple.Item2);
                     }
                 }
 
-                foreach (Agent agent in AgentRecoveryTimers.Keys.ToList())
+                foreach (Agent agent in new List<Agent>(AgentRecoveryTimers.Keys))
                 {
+                    if (agent == null || !agent.IsActive() || agent.Character == null)
+                        continue;
+
                     // frame rate dependent, might be bugged
-                    if (AgentRecoveryTimers[agent] > AgentInitializeMissionEquipmentPatch.frameRate * StaminaSettings.Instance.SecondsBeforeStaminaRegenerates)
+                    if (AgentRecoveryTimers[agent] > FrameRate * StaminaSettings.Instance.SecondsBeforeStaminaRegenerates)
                     {
                         //AgentRecoveryTimers[agent] = 0;
 
                         if (agent.GetCurrentVelocity().Length > agent.GetMaximumForwardUnlimitedSpeed() * StaminaSettings.Instance.MaximumMoveSpeedPercentStaminaRegenerates)
-                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaSettings.Instance.StaminaRecoveredPerTickMoving, true);
+                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaSettings.Instance.StaminaRecoveredPerTickMoving, true, "mov");
                         else
-                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaSettings.Instance.StaminaRecoveredPerTickResting, true);
+                            MissionSpawnAgentPatch.UpdateStaminaHandler(agent, StaminaSettings.Instance.StaminaRecoveredPerTickResting, true, "rst");
                     }
                 }
             }
@@ -159,37 +173,35 @@ namespace BattleStamina.Patches
             agent.SetMaximumSpeedLimit(newSpeed, multiplier);
         }
 
+
         public static void Cleanup()
         {
-            Agent agent = MissionSpawnAgentPatch.heroAgent;
-
-            if (agent != null)
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    MissionWeapon currentWeapon = agent.Equipment[i];
-
-                    if (currentWeapon.Item != null)
-                    {
-                        // normalize speed multiplier between 100% and minimum set in properties and ensure speed multiplier above minimum
-                        double newSwingSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent.Index][i].Item1;
-                        double newThrustSpeed = AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[agent.Index][i].Item2;
-
-                        ChangeWeaponSpeed(agent, i, newSwingSpeed, newThrustSpeed, currentWeapon);
-                    }
-                }
-
-                //ChangeMoveSpeed(MissionSpawnAgentPatch.heroAgent, MissionSpawnAgentPatch.heroAgent.MaximumForwardUnlimitedSpeed, false);
-            }
-
             AgentRecoveryTimers.Clear();
             AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Clear();
             MissionSpawnAgentPatch.AgentsToBeUpdated.Clear();
             MissionSpawnAgentPatch.CurrentStaminaPerAgent.Clear();
             MissionSpawnAgentPatch.CurrentMaxStaminaPerAgent.Clear();
             MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Clear();
+            MissionSpawnAgentPatch.CurrentTierPerAgent.Clear();
+            MissionSpawnAgentPatch.QueuedAgentUpdates.Clear();
+            MissionSpawnAgentPatch.QueuedAgentUpdateRatios.Clear();
+            AgentAttackStaminaPatch.LastChargedMeleeAttackTimePerAgent.Clear();
+            AgentAttackStaminaPatch.LastChargedRangedAttackTimePerAgent.Clear();
+#if DEBUG
+            MissionSpawnAgentPatch.PendingDebugRegenPerAgent.Clear();
+#endif
             MissionSpawnAgentPatch.heroAgent = null;
+            MissionSpawnAgentPatch.debugAllyAgent = null;
         }
+    }
+
+    enum StaminaTier
+    {
+        No,
+        Low,
+        Medium,
+        High,
+        Full
     }
 
     [HarmonyPatch(typeof(Mission), "EndMission")]
@@ -220,9 +232,6 @@ namespace BattleStamina.Patches
         {
             try
             {
-                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed[__instance.Index][(int)weaponPickUpSlotIndex] = 
-                    new Tuple<int, int>(spawnedItemEntity.WeaponCopy.CurrentUsageItem.SwingSpeed, spawnedItemEntity.WeaponCopy.CurrentUsageItem.ThrustSpeed);
-
                 MissionOnTickPatch.ChangeWeaponSpeedsHandler(__instance, MissionSpawnAgentPatch.GetCurrentStaminaRatio(__instance));
             }
             catch (KeyNotFoundException)
@@ -230,6 +239,66 @@ namespace BattleStamina.Patches
 #if DEBUG
                 InformationManager.DisplayMessage(new InformationMessage("Caught KeyNotFoundException in AgentOnItemPickupPatch!", new Color(1.00f, 0.38f, 0.01f), "Debug"));
 #endif
+            }
+        }
+    }
+
+    class AgentAttackStaminaPatch
+    {
+        public static Dictionary<int, float> LastChargedMeleeAttackTimePerAgent = new Dictionary<int, float>();
+        public static Dictionary<int, float> LastChargedRangedAttackTimePerAgent = new Dictionary<int, float>();
+
+        public static void ApplyAttackStaminaCost(Agent agent, bool isRangedAttack)
+        {
+            if (agent == null || agent.Character == null || !agent.IsActive())
+                return;
+
+            MissionOnTickPatch.AgentRecoveryTimers[agent] = 0;
+
+            MissionSpawnAgentPatch.UpdateStaminaHandler(
+                agent,
+                isRangedAttack ? StaminaSettings.Instance.StaminaCostToRangedAttack : StaminaSettings.Instance.StaminaCostToMeleeAttack,
+                false,
+                isRangedAttack ? "rng" : "atk");
+        }
+
+        public static bool ShouldChargeAttack(Dictionary<int, float> lastChargedAttackTimePerAgent, Agent agent, float attackTime)
+        {
+            if (agent == null)
+                return false;
+
+            float lastChargedAttackTime;
+            if (lastChargedAttackTimePerAgent.TryGetValue(agent.Index, out lastChargedAttackTime) &&
+                Math.Abs(lastChargedAttackTime - attackTime) < 0.0001f)
+            {
+                return false;
+            }
+
+            lastChargedAttackTimePerAgent[agent.Index] = attackTime;
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Agent), "set_LastMeleeAttackTime")]
+    class AgentSetLastMeleeAttackTimePatch
+    {
+        public static void Prefix(Agent __instance, float value)
+        {
+            if (AgentAttackStaminaPatch.ShouldChargeAttack(AgentAttackStaminaPatch.LastChargedMeleeAttackTimePerAgent, __instance, value))
+            {
+                AgentAttackStaminaPatch.ApplyAttackStaminaCost(__instance, false);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Agent), "UpdateLastRangedAttackTimeDueToAnAttack")]
+    class AgentUpdateLastRangedAttackTimeDueToAnAttackPatch
+    {
+        public static void Prefix(Agent __instance, float newTime)
+        {
+            if (AgentAttackStaminaPatch.ShouldChargeAttack(AgentAttackStaminaPatch.LastChargedRangedAttackTimePerAgent, __instance, newTime))
+            {
+                AgentAttackStaminaPatch.ApplyAttackStaminaCost(__instance, true);
             }
         }
     }
@@ -245,20 +314,6 @@ namespace BattleStamina.Patches
       bool isBlocked,
       float damagedHp)
         {
-            if (affectorAgent.Character != null && affectorAgent.IsActive())
-            {
-                MissionOnTickPatch.AgentRecoveryTimers[affectorAgent] = 0;
-
-                if (b.IsMissile)
-                {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaSettings.Instance.StaminaCostToRangedAttack);
-                }
-                else
-                {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectorAgent, StaminaSettings.Instance.StaminaCostToMeleeAttack);
-                }
-            }
-
             if (affectedAgent.Character != null && affectedAgent.IsActive() && affectedAgent.Health - damagedHp > 0)
             {
                 MissionOnTickPatch.AgentRecoveryTimers[affectedAgent] = 0;
@@ -266,11 +321,11 @@ namespace BattleStamina.Patches
                 if (isBlocked)
                 {
 
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaSettings.Instance.StaminaCostPerBlockedDamage);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaSettings.Instance.StaminaCostPerBlockedDamage, false, "blk");
                 }
                 else
                 {
-                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaSettings.Instance.StaminaCostPerReceivedDamage);
+                    MissionSpawnAgentPatch.UpdateStaminaHandler(affectedAgent, damagedHp * StaminaSettings.Instance.StaminaCostPerReceivedDamage, false, "hit");
                 }
             }
         }
@@ -283,13 +338,14 @@ namespace BattleStamina.Patches
         public static Dictionary<int, double> OriginalMaxStaminaPerAgent = new Dictionary<int, double>();
         public static Dictionary<int, double> CurrentMaxStaminaPerAgent = new Dictionary<int, double>();
         public static Dictionary<int, double> CurrentStaminaPerAgent = new Dictionary<int, double>();
+        public static Dictionary<int, StaminaTier> CurrentTierPerAgent = new Dictionary<int, StaminaTier>();
+        public static HashSet<int> QueuedAgentUpdates = new HashSet<int>();
+        public static Dictionary<int, double> QueuedAgentUpdateRatios = new Dictionary<int, double>();
         public static Agent heroAgent;
-
-        public static bool FullStaminaTier = true;
-        public static bool HighStaminaTier = false;
-        public static bool MediumStaminaTier = false;
-        public static bool LowStaminaTier = false;
-        public static bool NoStaminaTier = false;
+        public static Agent debugAllyAgent;
+#if DEBUG
+        public static Dictionary<int, double> PendingDebugRegenPerAgent = new Dictionary<int, double>();
+#endif
 
         public static void Postfix(Mission __instance,
       AgentBuildData agentBuildData,
@@ -311,17 +367,44 @@ namespace BattleStamina.Patches
                 OriginalMaxStaminaPerAgent.Add(__result.Index, fullStamina);
                 CurrentMaxStaminaPerAgent.Add(__result.Index, fullStamina);
                 CurrentStaminaPerAgent.Add(__result.Index, fullStamina);
+                CurrentTierPerAgent.Add(__result.Index, StaminaTier.Full);
             }
-#if DEBUG
-                InformationManager.DisplayMessage(new InformationMessage("Agent " + __result.Name + " has " + CurrentStaminaPerAgent[__result.Index] + " stamina" , new Color(1.00f, 0.38f, 0.01f), "Debug"));
-#endif
-
             MissionOnTickPatch.AgentRecoveryTimers.Add(__result, 0);
 
             if (__result.IsPlayerUnit)
             {
                 heroAgent = __result;
+#if DEBUG
+                TrySetDebugAllyAgent();
+#endif
             }
+
+#if DEBUG
+            TrySetDebugAllyAgent(__result);
+#endif
+        }
+
+        public static bool IsAgentQueuedForUpdate(Agent agent)
+        {
+            return agent != null && QueuedAgentUpdates.Contains(agent.Index);
+        }
+
+        public static void MarkAgentUpdateDequeued(Agent agent)
+        {
+            if (agent != null)
+            {
+                QueuedAgentUpdates.Remove(agent.Index);
+                QueuedAgentUpdateRatios.Remove(agent.Index);
+            }
+        }
+
+        public static double GetQueuedAgentUpdateRatio(Agent agent, double fallbackStaminaRatio)
+        {
+            if (agent == null)
+                return fallbackStaminaRatio;
+
+            double staminaRatio;
+            return QueuedAgentUpdateRatios.TryGetValue(agent.Index, out staminaRatio) ? staminaRatio : fallbackStaminaRatio;
         }
 
         public static double GetCurrentStaminaRatio(Agent agent)
@@ -339,12 +422,12 @@ namespace BattleStamina.Patches
             }
         }
 
-        public static void UpdateStaminaHandler(Agent agent, double staminaDelta, bool recovering = false)
+        public static void UpdateStaminaHandler(Agent agent, double staminaDelta, bool recovering = false, string reason = "sta")
         {
             try
             {
                 double newStamina = recovering ? CurrentStaminaPerAgent[agent.Index] + staminaDelta : CurrentStaminaPerAgent[agent.Index] - staminaDelta;
-                UpdateStamina(agent, newStamina < 0 ? 0 : newStamina, recovering);
+                UpdateStamina(agent, newStamina < 0 ? 0 : newStamina, recovering, reason);
             }
             catch (KeyNotFoundException)
             {
@@ -354,18 +437,15 @@ namespace BattleStamina.Patches
             }
         }
 
-        private static void UpdateStamina(Agent agent, double newStamina, bool recovering = false)
+        private static void UpdateStamina(Agent agent, double newStamina, bool recovering = false, string reason = "sta")
         {
             //double oldStaminaRatio = GetCurrentStaminaRatio(agent);
+            double oldStamina = CurrentStaminaPerAgent[agent.Index];
             double newStaminaRatio = newStamina / OriginalMaxStaminaPerAgent[agent.Index];
-            bool changedTier = GetTierChanged(newStaminaRatio, recovering);
+            StaminaTier oldTier = CurrentTierPerAgent[agent.Index];
 
             if (!agent.IsActive())
                 return;
-#if DEBUG
-            if (agent.IsPlayerUnit)
-                InformationManager.DisplayMessage(new InformationMessage("Agent " + agent.Name + " has " + CurrentStaminaPerAgent[agent.Index] + " stamina", new Color(1.00f, 0.38f, 0.01f), "Debug"));
-#endif
 
             if (recovering)
             {
@@ -385,101 +465,77 @@ namespace BattleStamina.Patches
             {
                 CurrentStaminaPerAgent[agent.Index] = newStamina > StaminaSettings.Instance.NoStaminaRemaining ? newStamina : StaminaSettings.Instance.NoStaminaRemaining;
 
-                if (newStaminaRatio <= StaminaSettings.Instance.LowStaminaRemaining && !LowStaminaTier)
+                if (newStaminaRatio <= StaminaSettings.Instance.LowStaminaRemaining && oldTier > StaminaTier.Low)
                 {
                     CurrentMaxStaminaPerAgent[agent.Index] -= OriginalMaxStaminaPerAgent[agent.Index] * .1; // lose 10% of max stamina whenever stamina falls below Low
                 }
             }
 
+            newStaminaRatio = CurrentStaminaPerAgent[agent.Index] / OriginalMaxStaminaPerAgent[agent.Index];
+            StaminaTier newTier = GetTier(newStaminaRatio);
+            bool changedTier = oldTier != newTier;
+
+#if DEBUG
+            PrintStaminaDebug(agent, reason, CurrentStaminaPerAgent[agent.Index] - oldStamina, newTier, changedTier);
+#endif
+
+
             if (changedTier)
             {
-                AgentsToBeUpdated.Enqueue(new Tuple<Agent, double>(agent, newStaminaRatio)); // update weapon speeds and move speed when stamina tier changes
+                CurrentTierPerAgent[agent.Index] = newTier;
+                EnqueueAgentUpdate(agent, newStaminaRatio); // update weapon speeds and move speed when stamina tier changes
 
                 if (agent.IsPlayerUnit)
                 {
-                    PrintTierChangedMessage(recovering);
+                    PrintTierChangedMessage(newTier, recovering);
                 }
             }
         }
 
-        private static bool GetTierChanged(double newStaminaRatio, bool recovering)
+        private static void EnqueueAgentUpdate(Agent agent, double staminaRatio)
         {
-            if (recovering)
-            {
-                if (NoStaminaTier && newStaminaRatio > StaminaSettings.Instance.NoStaminaRemaining)
-                {
-                    NoStaminaTier = false;
-                    LowStaminaTier = true;
-                    return true;
-                }
-                else if (LowStaminaTier && newStaminaRatio > StaminaSettings.Instance.LowStaminaRemaining)
-                {
-                    LowStaminaTier = false;
-                    MediumStaminaTier = true;
-                    return true;
-                }
-                else if (MediumStaminaTier && newStaminaRatio > StaminaSettings.Instance.MediumStaminaRemaining)
-                {
-                    MediumStaminaTier = false;
-                    HighStaminaTier = true;
-                    return true;
-                }
-                else if (HighStaminaTier && newStaminaRatio > StaminaSettings.Instance.HighStaminaRemaining)
-                {
-                    HighStaminaTier = false;
-                    FullStaminaTier = true;
-                    return true;
-                }
-            }
+            QueuedAgentUpdateRatios[agent.Index] = staminaRatio;
 
-            else
+            if (QueuedAgentUpdates.Add(agent.Index))
             {
-                if (LowStaminaTier && newStaminaRatio < StaminaSettings.Instance.LowStaminaRemaining)
-                {
-                    LowStaminaTier = false;
-                    NoStaminaTier = true;
-                    return true;
-                }
-                else if (MediumStaminaTier && newStaminaRatio < StaminaSettings.Instance.MediumStaminaRemaining)
-                {
-                    MediumStaminaTier = false;
-                    LowStaminaTier = true;
-                    return true;
-                }
-                else if (HighStaminaTier && newStaminaRatio < StaminaSettings.Instance.HighStaminaRemaining)
-                {
-                    HighStaminaTier = false;
-                    MediumStaminaTier = true;
-                    return true;
-                }
-                else if (FullStaminaTier && newStaminaRatio < StaminaSettings.Instance.FullStaminaRemaining)
-                {
-                    FullStaminaTier = false;
-                    HighStaminaTier = true;
-                    return true;
-                }
+                AgentsToBeUpdated.Enqueue(new Tuple<Agent, double>(agent, staminaRatio));
             }
-
-            return false;
         }
 
-        public static void PrintTierChangedMessage(bool recovering)
+        private static StaminaTier GetTier(double staminaRatio)
+        {
+            if (staminaRatio <= StaminaSettings.Instance.NoStaminaRemaining)
+                return StaminaTier.No;
+
+            if (staminaRatio < StaminaSettings.Instance.LowStaminaRemaining)
+                return StaminaTier.Low;
+
+            if (staminaRatio < StaminaSettings.Instance.MediumStaminaRemaining)
+                return StaminaTier.Medium;
+
+            if (staminaRatio < StaminaSettings.Instance.HighStaminaRemaining)
+                return StaminaTier.High;
+
+            return StaminaTier.Full;
+        }
+
+        public static void PrintTierChangedMessage(StaminaTier tier, bool recovering)
         {
             if (recovering)
             {
-                if (LowStaminaTier)
+                if (tier == StaminaTier.Low)
                 {
                     Print("You manage to catch your breath! You're feeling tired!", new Color(1.00f, 0.38f, 0.01f)); // orange
                 }
-                else if (MediumStaminaTier)
+                else if (tier == StaminaTier.Medium)
                 {
                     Print("Your heart calms! You're feeling winded!", new Color(1.0f, 0.83f, 0.0f)); // yellow
                 }
-                else if (HighStaminaTier)
+                else if (tier == StaminaTier.High)
                 {
                     Print("You're feeling warmed up!", new Color(0.91f, 0.84f, 0.42f)); // pale yellow
                 }
-                else if (FullStaminaTier)
+                else if (tier == StaminaTier.Full)
                 {
                     Print("You're feeling fresh!", new Color(0.64f, 0.78f, 0.22f)); // green
                 }
@@ -487,19 +543,19 @@ namespace BattleStamina.Patches
 
             else
             {
-                if (NoStaminaTier)
+                if (tier == StaminaTier.No)
                 {
                     Print("You're completely exhausted! Rest now!", new Color(0.55f, 0, 0)); // red
                 }
-                else if (LowStaminaTier)
+                else if (tier == StaminaTier.Low)
                 {
                     Print("You're feeling tired! Rest soon!", new Color(1.00f, 0.38f, 0.01f)); // orange
                 }
-                else if (MediumStaminaTier)
+                else if (tier == StaminaTier.Medium)
                 {
                     Print("You're feeling winded! You're attacks are slowing!", new Color(1.0f, 0.83f, 0.0f)); // yellow
                 }
-                else if (HighStaminaTier)
+                else if (tier == StaminaTier.High)
                 {
                     Print("You're feeling warmed up!", new Color(0.91f, 0.84f, 0.42f)); // pale yellow
                 }
@@ -510,6 +566,158 @@ namespace BattleStamina.Patches
         {
             InformationManager.DisplayMessage(new InformationMessage(message, color, "Combat"));
         }
+
+#if DEBUG
+        private static void TrySetDebugAllyAgent(Agent candidate = null)
+        {
+            try
+            {
+                if (debugAllyAgent != null && debugAllyAgent.IsActive())
+                    return;
+
+                if (heroAgent == null || !heroAgent.IsActive())
+                    return;
+
+                if (IsTrackableDebugAlly(candidate))
+                {
+                    SetDebugAllyAgent(candidate);
+                    return;
+                }
+
+                foreach (Agent agent in new List<Agent>(MissionOnTickPatch.AgentRecoveryTimers.Keys))
+                {
+                    if (IsTrackableDebugAlly(agent))
+                    {
+                        SetDebugAllyAgent(agent);
+                        return;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                debugAllyAgent = null;
+            }
+        }
+
+        private static void SetDebugAllyAgent(Agent agent)
+        {
+            debugAllyAgent = agent;
+            Print("STA ally " + GetDebugName(agent), new Color(0.64f, 0.78f, 0.22f));
+        }
+
+        private static bool IsTrackableDebugAlly(Agent agent)
+        {
+            try
+            {
+                return agent != null &&
+                    agent != heroAgent &&
+                    agent.IsActive() &&
+                    agent.Character != null &&
+                    heroAgent != null &&
+                    heroAgent.IsActive() &&
+                    agent.Team != null &&
+                    heroAgent.Team != null &&
+                    agent.Team == heroAgent.Team;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static void PrintStaminaDebug(Agent agent, string reason, double delta, StaminaTier tier, bool changedTier)
+        {
+            try
+            {
+                TrySetDebugAllyAgent(agent);
+
+                string label;
+                if (agent == heroAgent)
+                {
+                    label = "P";
+                }
+                else if (agent == debugAllyAgent)
+                {
+                    label = "A";
+                }
+                else
+                {
+                    return;
+                }
+
+                if (Math.Abs(delta) < 0.01)
+                    return;
+
+                bool isRegen = reason == "mov" || reason == "rst";
+                if (isRegen)
+                {
+                    double pendingDelta;
+                    PendingDebugRegenPerAgent.TryGetValue(agent.Index, out pendingDelta);
+                    pendingDelta += delta;
+
+                    if (Math.Abs(pendingDelta) < 5 && !changedTier)
+                    {
+                        PendingDebugRegenPerAgent[agent.Index] = pendingDelta;
+                        return;
+                    }
+
+                    PendingDebugRegenPerAgent.Remove(agent.Index);
+                    delta = pendingDelta;
+                }
+
+                int current = (int)Math.Round(CurrentStaminaPerAgent[agent.Index]);
+                int max = (int)Math.Round(OriginalMaxStaminaPerAgent[agent.Index]);
+                int percent = max > 0 ? (int)Math.Round(CurrentStaminaPerAgent[agent.Index] / OriginalMaxStaminaPerAgent[agent.Index] * 100) : 0;
+                int speedPercent = (int)Math.Round(GetSpeedMultiplier(CurrentStaminaPerAgent[agent.Index] / OriginalMaxStaminaPerAgent[agent.Index]) * 100);
+                int roundedDelta = (int)Math.Round(delta);
+                if (roundedDelta == 0 && !changedTier)
+                    return;
+
+                string deltaText = roundedDelta > 0 ? "+" + roundedDelta.ToString() : roundedDelta.ToString();
+                string tierText = changedTier ? TierCode(tier) + "*" : TierCode(tier);
+
+                Print("STA " + label + " " + reason + " " + deltaText + " " + current + "/" + max + " " + percent + "% " + tierText + " spd" + speedPercent, new Color(0.64f, 0.78f, 0.22f));
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private static double GetSpeedMultiplier(double staminaRatio)
+        {
+            return (staminaRatio * (1 - StaminaSettings.Instance.LowestSpeedFromStaminaDebuff)) + StaminaSettings.Instance.LowestSpeedFromStaminaDebuff;
+        }
+
+        private static string TierCode(StaminaTier tier)
+        {
+            switch (tier)
+            {
+                case StaminaTier.No:
+                    return "N";
+                case StaminaTier.Low:
+                    return "L";
+                case StaminaTier.Medium:
+                    return "M";
+                case StaminaTier.High:
+                    return "H";
+                default:
+                    return "F";
+            }
+        }
+
+        private static string GetDebugName(Agent agent)
+        {
+            try
+            {
+                string name = agent != null && agent.Name != null ? agent.Name.ToString() : "NPC";
+                return name.Length > 16 ? name.Substring(0, 16) : name;
+            }
+            catch (Exception)
+            {
+                return "NPC";
+            }
+        }
+#endif
     }
 
     [HarmonyPatch(typeof(Mission), "OnAgentRemoved")]
@@ -521,10 +729,26 @@ namespace BattleStamina.Patches
             {
                 MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
                 MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.CurrentMaxStaminaPerAgent.Remove(affectedAgent.Index);
                 MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.CurrentTierPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.QueuedAgentUpdates.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.QueuedAgentUpdateRatios.Remove(affectedAgent.Index);
+                AgentAttackStaminaPatch.LastChargedMeleeAttackTimePerAgent.Remove(affectedAgent.Index);
+                AgentAttackStaminaPatch.LastChargedRangedAttackTimePerAgent.Remove(affectedAgent.Index);
+#if DEBUG
+                MissionSpawnAgentPatch.PendingDebugRegenPerAgent.Remove(affectedAgent.Index);
+#endif
+
+                if (affectedAgent == MissionSpawnAgentPatch.debugAllyAgent)
+                {
+                    MissionSpawnAgentPatch.debugAllyAgent = null;
+                }
             }
         }
     }
+
+
 
     [HarmonyPatch(typeof(Agent), "InitializeMissionEquipment")]
     class AgentInitializeMissionEquipmentPatch
@@ -546,7 +770,6 @@ namespace BattleStamina.Patches
             AgentOriginalWeaponSpeed.Add(__instance.Index, equipmentList);
         }
     }
-
     [HarmonyPatch(typeof(ArenaPracticeFightMissionController), "OnAgentRemoved")]
     class ArenaPracticeFightMissionControllerOnAgentRemovedPatch
     {
@@ -558,10 +781,23 @@ namespace BattleStamina.Patches
         {
             if (affectedAgent != MissionSpawnAgentPatch.heroAgent)
             {
-                AgentInitializeMissionEquipmentPatch.AgentOriginalWeaponSpeed.Remove(affectedAgent.Index);
                 MissionOnTickPatch.AgentRecoveryTimers.Remove(affectedAgent);
                 MissionSpawnAgentPatch.CurrentStaminaPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.CurrentMaxStaminaPerAgent.Remove(affectedAgent.Index);
                 MissionSpawnAgentPatch.OriginalMaxStaminaPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.CurrentTierPerAgent.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.QueuedAgentUpdates.Remove(affectedAgent.Index);
+                MissionSpawnAgentPatch.QueuedAgentUpdateRatios.Remove(affectedAgent.Index);
+                AgentAttackStaminaPatch.LastChargedMeleeAttackTimePerAgent.Remove(affectedAgent.Index);
+                AgentAttackStaminaPatch.LastChargedRangedAttackTimePerAgent.Remove(affectedAgent.Index);
+#if DEBUG
+                MissionSpawnAgentPatch.PendingDebugRegenPerAgent.Remove(affectedAgent.Index);
+#endif
+
+                if (affectedAgent == MissionSpawnAgentPatch.debugAllyAgent)
+                {
+                    MissionSpawnAgentPatch.debugAllyAgent = null;
+                }
             }
         }
     }
