@@ -61,6 +61,46 @@ namespace BattleStamina
         }
 
         [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Stamina Cost per Weapon Weight", 0.0f, 10.0f, HintText = "Extra stamina depleted per point of melee or thrown weapon weight")]
+        public float StaminaCostPerWeaponWeight
+        {
+            get => StaminaSettings.Instance.StaminaCostPerWeaponWeight;
+            set { StaminaSettings.Instance.StaminaCostPerWeaponWeight = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Stamina Cost per Missile Speed", 0.0f, 0.5f, HintText = "Extra stamina depleted by bows and crossbows per point of missile speed")]
+        public float StaminaCostPerRangedMissileSpeed
+        {
+            get => StaminaSettings.Instance.StaminaCostPerRangedMissileSpeed;
+            set { StaminaSettings.Instance.StaminaCostPerRangedMissileSpeed = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Stamina Cost of Melee Hits", 0.0f, 20.0f, HintText = "Extra stamina depleted when a melee attack hits an agent")]
+        public float StaminaCostToMeleeHit
+        {
+            get => StaminaSettings.Instance.StaminaCostToMeleeHit;
+            set { StaminaSettings.Instance.StaminaCostToMeleeHit = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Melee Hit Speed Cost Modifier", 0.0f, 20.0f, HintText = "Extra melee hit stamina cost per point of movement speed damage modifier")]
+        public float StaminaCostPerMeleeHitSpeedModifier
+        {
+            get => StaminaSettings.Instance.StaminaCostPerMeleeHitSpeedModifier;
+            set { StaminaSettings.Instance.StaminaCostPerMeleeHitSpeedModifier = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Stamina Cost of Shield Impact", 0.0f, 20.0f, HintText = "Extra stamina depleted when a melee attack hits a shield")]
+        public float StaminaCostToMeleeShieldImpact
+        {
+            get => StaminaSettings.Instance.StaminaCostToMeleeShieldImpact;
+            set { StaminaSettings.Instance.StaminaCostToMeleeShieldImpact = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
         [SettingPropertyFloatingInteger("Stamina Cost of Blocking Damage", 0.0f, 5.0f, HintText = "The amount of stamina depleted per point of damage blocked")]
         public float StaminaCostPerBlockedDamage
         {
@@ -69,11 +109,35 @@ namespace BattleStamina
         }
 
         [SettingPropertyGroup("Stamina Costs")]
-        [SettingPropertyInteger("Stamina Cost of Receiving Damage", 0, 10, HintText = "The amount of stamina depleted per point of damage received")]
-        public int StaminaCostPerReceivedDamage
+        [SettingPropertyFloatingInteger("Stamina Cost of Receiving Damage", 0.0f, 10.0f, HintText = "The amount of stamina depleted per point of damage received")]
+        public float StaminaCostPerReceivedDamage
         {
             get => StaminaSettings.Instance.StaminaCostPerReceivedDamage;
             set { StaminaSettings.Instance.StaminaCostPerReceivedDamage = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Stamina Cost per Second Sprinting", 0.0f, 20.0f, HintText = "Base stamina depleted per second while moving at sprint speed, unless mounted")]
+        public float StaminaCostPerSecondSprinting
+        {
+            get => StaminaSettings.Instance.StaminaCostPerSecondSprinting;
+            set { StaminaSettings.Instance.StaminaCostPerSecondSprinting = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Sprinting Cost per Carried Weight", 0.0f, 1.0f, HintText = "Extra stamina depleted per second while sprinting, per point of carried equipment weight")]
+        public float StaminaCostPerSecondSprintingPerCarriedWeight
+        {
+            get => StaminaSettings.Instance.StaminaCostPerSecondSprintingPerCarriedWeight;
+            set { StaminaSettings.Instance.StaminaCostPerSecondSprintingPerCarriedWeight = value; StaminaSettings.Save(); }
+        }
+
+        [SettingPropertyGroup("Stamina Costs")]
+        [SettingPropertyFloatingInteger("Sprint Stamina Drain Move Speed", 0.1f, 1f, HintText = "The move speed percentage above which unmounted agents lose stamina from sprinting")]
+        public float MinimumMoveSpeedPercentStaminaDrains
+        {
+            get => StaminaSettings.Instance.MinimumMoveSpeedPercentStaminaDrains;
+            set { StaminaSettings.Instance.MinimumMoveSpeedPercentStaminaDrains = value; StaminaSettings.Save(); }
         }
 
         [SettingPropertyGroup("Stamina Debuffs")]

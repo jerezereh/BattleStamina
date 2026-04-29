@@ -4,19 +4,27 @@
   <StaminaGainedPerAthletics>3</StaminaGainedPerAthletics>
   <StaminaGainedPerCombatSkill>1</StaminaGainedPerCombatSkill>
   <StaminaGainedPerLevel>10</StaminaGainedPerLevel>
-  <StaminaCostToMeleeAttack>40</StaminaCostToMeleeAttack>
-  <StaminaCostToRangedAttack>40</StaminaCostToRangedAttack>
-  <StaminaCostPerBlockedDamage>1.5</StaminaCostPerBlockedDamage>
-  <StaminaCostPerReceivedDamage>6</StaminaCostPerReceivedDamage>
-  <LowestSpeedFromStaminaDebuff>0.5</LowestSpeedFromStaminaDebuff>
-  <StaminaRecoveredPerTickMoving>0.05</StaminaRecoveredPerTickMoving>
-  <StaminaRecoveredPerTickResting>0.2</StaminaRecoveredPerTickResting>
+  <StaminaCostToMeleeAttack>8</StaminaCostToMeleeAttack>
+  <StaminaCostToRangedAttack>8</StaminaCostToRangedAttack>
+  <StaminaCostPerWeaponWeight>3</StaminaCostPerWeaponWeight>
+  <StaminaCostPerRangedMissileSpeed>0.08</StaminaCostPerRangedMissileSpeed>
+  <StaminaCostToMeleeHit>3</StaminaCostToMeleeHit>
+  <StaminaCostPerMeleeHitSpeedModifier>6</StaminaCostPerMeleeHitSpeedModifier>
+  <StaminaCostToMeleeShieldImpact>4</StaminaCostToMeleeShieldImpact>
+  <StaminaCostPerBlockedDamage>0.15</StaminaCostPerBlockedDamage>
+  <StaminaCostPerReceivedDamage>1.5</StaminaCostPerReceivedDamage>
+  <StaminaCostPerSecondSprinting>1</StaminaCostPerSecondSprinting>
+  <StaminaCostPerSecondSprintingPerCarriedWeight>0.08</StaminaCostPerSecondSprintingPerCarriedWeight>
+  <LowestSpeedFromStaminaDebuff>0.35</LowestSpeedFromStaminaDebuff>
+  <StaminaRecoveredPerTickMoving>0.015</StaminaRecoveredPerTickMoving>
+  <StaminaRecoveredPerTickResting>0.04</StaminaRecoveredPerTickResting>
   <SecondsBeforeStaminaRegenerates>6</SecondsBeforeStaminaRegenerates>
   <MaximumMoveSpeedPercentStaminaRegenerates>0.3</MaximumMoveSpeedPercentStaminaRegenerates>
+  <MinimumMoveSpeedPercentStaminaDrains>0.75</MinimumMoveSpeedPercentStaminaDrains>
   <FullStaminaRemaining>1</FullStaminaRemaining>
   <HighStaminaRemaining>0.75</HighStaminaRemaining>
   <MediumStaminaRemaining>0.5</MediumStaminaRemaining>
-  <LowStaminaRemaining>0.25</LowStaminaRemaining>
+  <LowStaminaRemaining>0.1</LowStaminaRemaining>
   <NoStaminaRemaining>0.01</NoStaminaRemaining>
   <NoStaminaRemainingStopsAttacks>false</NoStaminaRemainingStopsAttacks>
   <StaminaAffectsCrushThrough>true</StaminaAffectsCrushThrough>
