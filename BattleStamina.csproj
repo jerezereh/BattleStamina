@@ -311,6 +311,7 @@
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(ProjectDir)SubModule.xml" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\SubModule.xml"
 copy /y "$(TargetPath)" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\bin\Win64_Shipping_Client\BattleStamina.dll"
+copy /y "$(ProjectDir)ModuleData\BattleStaminaSettings.xml" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\ModuleData\BattleStaminaSettings.xml"
 robocopy /s /e "$(ProjectDir)Sprites" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\Sprites" &amp; if errorlevel 8 exit /b 1
 robocopy /s /e "$(ProjectDir)GUI" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\GUI" &amp; if errorlevel 8 exit /b 1
 robocopy /s /e "$(ProjectDir)ModuleData" "M:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\BattleStamina\ModuleData" &amp; if errorlevel 8 exit /b 1
