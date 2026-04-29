@@ -1,0 +1,42 @@
+BattleStamina balance notes
+
+Current issues to revisit:
+
+1. Shield block stamina loss is too high.
+   Shield damage appears to use shield hit point scale rather than agent hit point scale, so
+   the current blocked-damage stamina cost over-penalizes shield users. Likely fix: lower
+   StaminaCostPerBlockedDamage and/or separate shield-block cost from weapon/parry block cost.
+
+2. Total stamina versus stamina costs is out of balance.
+   Characters can become exhausted after only a few attacks plus a few hits/blocks. Revisit
+   base stamina, attack costs, damage costs, tier thresholds, and fatigue multiplier strength
+   together instead of tuning them independently.
+
+3. Stamina growth is too weak versus current costs.
+   Mid-level characters are only landing around 1000 stamina in testing, so trained characters
+   still exhaust too similarly to new characters. Revisit the stamina formula and consider
+   higher scaling from level, Athletics, and relevant weapon skills.
+
+4. Attack stamina cost should account for weapon or projectile effort.
+   Melee and thrown attacks should scale with weapon weight. Bows and other ranged weapons
+   should probably scale by missile speed or equivalent draw/reload effort instead of using a
+   flat ranged cost.
+
+5. Movement stamina cost should account for carried weight.
+   Total carried equipment weight should increase stamina loss from movement, unless the
+   agent is mounted.
+
+6. Stamina bar disappears at zero stamina.
+   The HUD should still show an empty stamina bar when stamina reaches zero instead of hiding
+   or collapsing the bar.
+
+7. Fatigue changes attack animation speed but not damage speed.
+   Damage calculation uses weapon/attack speed, so applying fatigue only through animation or
+   driven-property speed multipliers may make attacks look slower without reducing the speed
+   value used by damage. Need to find the damage-speed path and apply the same fatigue factor
+   there.
+
+8. Stamina bar lingers after the player is knocked out.
+   When the rest of the agent status GUI disappears after knockout, the stamina bar remains
+   visible. The stamina view model or prefab binding needs to hide/disable itself when the
+   main agent status HUD is no longer active or the hero agent is knocked out.
